@@ -5,6 +5,7 @@ export const REPO_NAME = "Phxxxxx";
 export const REPO_BRANCH = "main";
 export const DATA_PATH = "frontend/src/staticData.json";
 export const IMAGES_DIR = "frontend/public/images/products";
+export const BANNERS_DIR = "frontend/public/images/banners";
 
 const API = "https://api.github.com";
 
@@ -87,7 +88,7 @@ const putFile = (token, path, base64Content, message, sha) =>
  * Publishes a draft: uploads new product images first, then the data file.
  * `images` is { [productId]: base64Jpeg }. Returns the new data sha.
  */
-export const publishStore = async (token, { data, loadedSha, images, onStep }) => {
+export const publishStore = async (token, { data, loadedSha, images, bannerImages, onStep }) => {
   const currentSha = await getSha(token, DATA_PATH);
   if (loadedSha && currentSha && currentSha !== loadedSha) throw new GitHubError(409, explain(409));
 
@@ -104,7 +105,21 @@ export const publishStore = async (token, { data, loadedSha, images, onStep }) =
     if (product) product.image = `./images/products/${id}.jpg?v=${Date.now().toString(36)}`;
   }
 
-  if (onStep) onStep("حفظ المنتجات والأقسام");
+  const bannerIds = Object.keys(bannerImages || {});
+  for (let i = 0; i < bannerIds.length; i++) {
+    const id = bannerIds[i];
+    const pending = `pending:${id}`;
+    const banners = (finalData.settings && finalData.settings.banners) || [];
+    if (!banners.some((b) => b && b.img === pending)) continue; // banner removed before publishing
+    if (onStep) onStep(`رفع صور البانر (${i + 1}/${bannerIds.length})`);
+    await putFile(token, `${BANNERS_DIR}/${id}.jpg`, bannerImages[id], `Add banner image ${id}`, await getSha(token, `${BANNERS_DIR}/${id}.jpg`));
+    banners.forEach((b) => { if (b && b.img === pending) b.img = `./images/banners/${id}.jpg`; });
+  }
+  if (finalData.settings && Array.isArray(finalData.settings.banners)) {
+    finalData.settings.banners = finalData.settings.banners.filter((b) => !(b && String(b.img || "").startsWith("pending:")));
+  }
+
+  if (onStep) onStep("حفظ المنتجات والأقسام والإعدادات");
   const json = JSON.stringify(finalData);
   const result = await putFile(token, DATA_PATH, utf8ToBase64(json), "Update store data from admin panel", currentSha);
   return { data: finalData, sha: result.content.sha };

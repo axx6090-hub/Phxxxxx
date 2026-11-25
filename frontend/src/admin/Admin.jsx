@@ -5,6 +5,7 @@ import { loadStoreData, publishStore, REPO_OWNER, REPO_NAME } from "./github";
 import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, makeWhiteBackground, resizeForAnalysis, dataUrlToBase64 } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
+import { SiteSettings } from "./SiteSettings";
 
 const TOKEN_KEY = "admin_gh_token";
 const AI_KEY = "admin_ai_key";
@@ -283,6 +284,8 @@ const Panel = ({ token, initial, onLogout }) => {
   const [sha, setSha] = useState(initial.sha);
   const [images, setImages] = useState({}); // productId -> base64 jpeg waiting to be uploaded
   const [previews, setPreviews] = useState({}); // productId -> data URL for unpublished photos
+  const [bannerImages, setBannerImages] = useState({}); // pendingId -> base64 jpeg
+  const [bannerPreviews, setBannerPreviews] = useState({}); // pendingId -> data URL
   const [dirty, setDirty] = useState(0);
   const [tab, setTab] = useState("orders");
   const ordersState = useOrders(token);
@@ -374,10 +377,11 @@ const Panel = ({ token, initial, onLogout }) => {
     setPublishing("جاري النشر...");
     setMessage(null);
     try {
-      const result = await publishStore(token, { data, loadedSha: sha, images, onStep: setPublishing });
+      const result = await publishStore(token, { data, loadedSha: sha, images, bannerImages, onStep: setPublishing });
       setData(result.data);
       setSha(result.sha);
       setImages({});
+      setBannerImages({});
       setDirty(0);
       setMessage({ ok: true, text: "تم النشر ✅ التغييرات تظهر بالموقع خلال دقيقتين تقريباً." });
     } catch (err) {
@@ -388,7 +392,7 @@ const Panel = ({ token, initial, onLogout }) => {
   };
 
   const editing = editingId ? data.products.find((p) => p.id === editingId) : null;
-  const tabs = [["orders", ordersState.unseen ? `الطلبات 🔴 ${ordersState.unseen}` : "الطلبات"], ["products", `المنتجات (${data.products.length})`], ["add", "إضافة منتج"], ["categories", `الأقسام (${data.categories.length})`], ["notifications", "الإشعارات 🔔"], ["settings", "الإعدادات"]];
+  const tabs = [["orders", ordersState.unseen ? `الطلبات 🔴 ${ordersState.unseen}` : "الطلبات"], ["products", `المنتجات (${data.products.length})`], ["add", "إضافة منتج"], ["categories", `الأقسام (${data.categories.length})`], ["site", "إعدادات الموقع"], ["notifications", "الإشعارات 🔔"], ["settings", "الإعدادات"]];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8" data-testid="admin-panel">
@@ -416,6 +420,19 @@ const Panel = ({ token, initial, onLogout }) => {
       </div>
 
       {tab === "orders" && <OrdersTab token={token} state={ordersState} />}
+
+      {tab === "site" && (
+        <SiteSettings
+          settings={data.settings}
+          categories={data.categories}
+          bannerPreviews={bannerPreviews}
+          onBannerImage={(id, dataUrl) => {
+            setBannerImages((m) => ({ ...m, [id]: dataUrlToBase64(dataUrl) }));
+            setBannerPreviews((m) => ({ ...m, [id]: dataUrl }));
+          }}
+          onChange={(next) => change((d) => { d.settings = next; return d; })}
+        />
+      )}
 
       {tab === "notifications" && (
         <div className="bg-white border border-pink-100 rounded-3xl p-5 sm:p-7">
@@ -480,9 +497,9 @@ const Panel = ({ token, initial, onLogout }) => {
           <div className="space-y-2">
             {data.categories.map((c) => (
               <div key={c.id} className="flex items-center gap-3 bg-white border border-pink-100 rounded-2xl p-3" data-testid={`admin-cat-${c.id}`}>
-                <span className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center text-2xl shrink-0">{c.emoji || "🛍️"}</span>
+                <input value={c.emoji || ""} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).emoji = e.target.value; return d; })} maxLength={4} aria-label="إيموجي القسم" className="w-11 h-11 rounded-xl bg-pink-50 text-center text-2xl shrink-0 outline-none focus:ring-2 focus:ring-pink-300" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-gray-900">{c.name}</p>
+                  <input value={c.name} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).name = e.target.value; return d; })} aria-label="اسم القسم" className="w-full font-semibold text-sm text-gray-900 bg-transparent border-b border-transparent hover:border-pink-200 focus:border-pink-400 outline-none" data-testid={`admin-cat-rename-${c.id}`} />
                   <p className="text-xs text-gray-500">{counts[c.id] || 0} منتج</p>
                 </div>
                 <label className="flex items-center gap-1.5 text-xs text-gray-600 shrink-0">
@@ -492,7 +509,7 @@ const Panel = ({ token, initial, onLogout }) => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500">القسم اللي بيه منتجات ما ينحذف — احذف منتجاته أو انقلها لقسم ثاني أولاً.</p>
+          <p className="text-xs text-gray-500">تكدر تغيّر اسم القسم والإيموجي مباشرة من القائمة. القسم اللي بيه منتجات ما ينحذف — احذف منتجاته أو انقلها لقسم ثاني أولاً.</p>
         </div>
       )}
 

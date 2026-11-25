@@ -5,12 +5,13 @@ import staticData from "./staticData.json";
 import { ShoppingBag, Heart, Search, Menu, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook } from "lucide-react";
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
+import { SETTINGS } from "./siteSettings";
 
 const Admin = lazy(() => import("./admin/Admin"));
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const WHATSAPP_NUMBER = "9647832882348"; // 07832882348 with Iraq country code
+const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
 const buildWhatsAppUrl = (text) =>
   `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 // Opens an empty tab synchronously (inside the customer's tap) so it is not blocked,
@@ -25,7 +26,7 @@ const openPendingTab = () => {
   } catch (e) { /* ignore */ }
   return win;
 };
-const DELIVERY_FEE = 5000; // د.ع - flat fee for all Iraqi governorates
+const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - flat fee for all Iraqi governorates (admin panel)
 
 const formatPrice = (n) => Number(n).toLocaleString("en-US") + " د.ع";
 
@@ -163,22 +164,14 @@ const Header = () => {
     }
   };
 
-  const navLinks = [
-    { name: "العروض", to: "/collection/offers" },
-    { name: "الأكثر طلباً", to: "/collection/best-selling" },
-    { name: "مرطبات", to: "/collection/category-moisturizer" },
-    { name: "فازلين", to: "/collection/category-vaseline" },
-    { name: "واقي شمس", to: "/collection/category-sunscreen" },
-    { name: "سيروم", to: "/collection/category-serum" },
-    { name: "غسول", to: "/collection/category-cleansers" },
-  ];
+  const navLinks = SETTINGS.navLinks;
 
   return (
     <>
       {/* Top announcement bar */}
       <div className="bg-[#e91e63] text-white text-center text-xs sm:text-sm py-2 px-4 overflow-hidden">
         <div className="marquee whitespace-nowrap">
-          🚚 توصيل لكافة محافظات العراق بـ 5,000 د.ع فقط &nbsp; • &nbsp; ✨ منتجات أصلية 100% &nbsp; • &nbsp; 💕 اطلبي الحين عبر واتساب &nbsp; •
+          {SETTINGS.announcement}
         </div>
       </div>
 
@@ -193,7 +186,7 @@ const Header = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
               <div className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                <span className="text-[#e91e63]">صيدلية أيمن</span>
+                <span className="text-[#e91e63]">{SETTINGS.storeName}</span>
               </div>
             </Link>
 
@@ -253,7 +246,7 @@ const Header = () => {
         <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" onClick={() => setMenuOpen(false)}>
           <div className="absolute top-0 right-0 h-full w-80 max-w-[85%] bg-white p-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-8">
-              <span className="text-xl font-extrabold text-[#e91e63]">صيدلية أيمن</span>
+              <span className="text-xl font-extrabold text-[#e91e63]">{SETTINGS.storeName}</span>
               <button onClick={() => setMenuOpen(false)} data-testid="mobile-menu-close"><X size={24} /></button>
             </div>
             <nav className="flex flex-col gap-1 text-base">
@@ -381,7 +374,7 @@ const ProductCard = ({ product }) => {
           {hasDiscount && <span className="text-gray-400 line-through text-xs">{formatPrice(product.sale_price)}</span>}
         </div>
         {/* Social proof */}
-        {!isFreeNoWhatsApp && (() => {
+        {!isFreeNoWhatsApp && SETTINGS.showSocialProof && (() => {
           const sp = getSocialProof(product.id);
           return (
             <div className="flex items-center gap-1 text-[11px] text-red-500 font-semibold mb-3 animate-pulse">
@@ -414,15 +407,14 @@ const ProductCard = ({ product }) => {
 
 // ============== HERO SECTION ==============
 const Hero = () => {
-  const slides = [
-    { img: "https://barbiephar.com/cdn/shop/files/2_6d2a305d-94d7-4512-867c-feb17cb5fff1.jpg?v=1778683647", link: "/collection/offers", title: "بلاك فرايدي", subtitle: "خصومات تصل لـ 52%" },
-    { img: "https://barbiephar.com/cdn/shop/files/bshrtg-tdoy.jpg?v=1775080334&width=1100", link: "/product/offer-89", title: "بشرتج تضوي", subtitle: "مجموعة الحلزون" },
-  ];
+  const slides = SETTINGS.banners.filter((s) => s && s.img);
   const [i, setI] = useState(0);
   useEffect(() => {
+    if (slides.length < 2) return undefined;
     const t = setInterval(() => setI((p) => (p + 1) % slides.length), 5000);
     return () => clearInterval(t);
-  }, []);
+  }, [slides.length]);
+  if (slides.length === 0) return null;
 
   return (
     <section className="relative bg-gradient-to-br from-pink-100 via-rose-50 to-pink-50 overflow-hidden">
@@ -448,12 +440,9 @@ const Hero = () => {
 
 // ============== FEATURE STRIP ==============
 const FeatureStrip = () => {
-  const features = [
-    { icon: Truck, title: "توصيل لكل العراق", desc: "5,000 د.ع لكافة المحافظات" },
-    { icon: ShieldCheck, title: "منتجات أصلية", desc: "مضمونة 100% من المصدر" },
-    { icon: Sparkles, title: "أكثر من 500,000", desc: "عميلة سعيدة" },
-    { icon: MessageCircle, title: "استشارة", desc: "تواصلي عبر واتساب" },
-  ];
+  const icons = [Truck, ShieldCheck, Sparkles, MessageCircle];
+  const features = SETTINGS.features.filter((f) => f && (f.title || f.desc)).map((f, idx) => ({ ...f, icon: icons[idx % icons.length] }));
+  if (features.length === 0) return null;
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -736,7 +725,7 @@ const ProductDetail = () => {
             {hasDiscount && <span className="text-gray-400 line-through text-lg">{formatPrice(product.sale_price)}</span>}
           </div>
           {/* Social proof banner */}
-          {!isFreeNoWhatsApp && (() => {
+          {!isFreeNoWhatsApp && SETTINGS.showSocialProof && (() => {
             const sp = getSocialProof(product.id);
             return (
               <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 text-sm font-bold px-3 py-2 rounded-full mb-6 animate-pulse w-fit">
@@ -778,7 +767,7 @@ const ProductDetail = () => {
           )}
 
           <div className="border-t border-pink-100 pt-5 space-y-3 text-sm">
-            <div className="flex items-center gap-2 text-gray-700"><Truck size={18} className="text-pink-600" /> توصيل لكافة محافظات العراق بـ 5,000 د.ع</div>
+            <div className="flex items-center gap-2 text-gray-700"><Truck size={18} className="text-pink-600" /> توصيل لكافة محافظات العراق بـ {formatPrice(DELIVERY_FEE)}</div>
             <div className="flex items-center gap-2 text-gray-700"><ShieldCheck size={18} className="text-pink-600" /> منتج أصلي 100% مضمون</div>
             {isFreeNoWhatsApp ? (
               <div className="flex items-center gap-2 text-gray-700"><Sparkles size={18} className="text-pink-600" /> انسخي الوصف واستخدميه مجاناً</div>
@@ -888,7 +877,7 @@ const Checkout = () => {
       ? "🚚 التوصيل: مجاني 🎉"
       : `🚚 التوصيل (كل المحافظات): ${formatPrice(orderDelivery)}`;
     const lines = [
-      "🌸 طلب جديد - صيدلية أيمن 🌸",
+      `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
       saved ? `🧾 رقم الطلب: ${saved.id}` : null,
       "━━━━━━━━━━━━━━━",
       "",
@@ -1077,8 +1066,8 @@ const Checkout = () => {
 const Footer = () => (
   <footer className="bg-gradient-to-br from-pink-900 via-rose-900 to-pink-950 text-pink-100 mt-16">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <h3 className="text-3xl font-extrabold mb-3"><span className="text-pink-300">صيدلية أيمن</span></h3>
-      <p className="text-pink-200/80 text-sm max-w-xl mx-auto mb-6">براند مميز لمنتجات العناية بالبشرة في العراق - منتجات مضمونة وتوصيل سريع 💕</p>
+      <h3 className="text-3xl font-extrabold mb-3"><span className="text-pink-300">{SETTINGS.storeName}</span></h3>
+      <p className="text-pink-200/80 text-sm max-w-xl mx-auto mb-6">{SETTINGS.footerText}</p>
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}`}
         target="_blank"
@@ -1088,7 +1077,7 @@ const Footer = () => (
         <MessageCircle size={18} /> تواصلي عبر واتساب
       </a>
       <div className="border-t border-pink-800/50 mt-8 pt-6 text-sm text-pink-300/70">
-        © 2026 صيدلية أيمن - جميع الحقوق محفوظة
+        © {new Date().getFullYear()} {SETTINGS.storeName} - جميع الحقوق محفوظة
       </div>
     </div>
   </footer>

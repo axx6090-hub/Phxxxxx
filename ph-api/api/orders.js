@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 import { route, readBody, HttpError, clientIp } from "../lib/http.js";
 import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob } from "../lib/store.js";
 import { requireAdmin } from "../lib/auth.js";
-import { loadCatalog } from "../lib/catalog.js";
+import { loadCatalog, deliveryFee as settingsDeliveryFee } from "../lib/catalog.js";
 import { notifyNewOrder } from "../lib/notify.js";
 
 const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
@@ -83,7 +83,7 @@ const createOrder = async (req) => {
   }
 
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
-  const deliveryFee = items.every((i) => i.free_delivery) ? 0 : DELIVERY_FEE;
+  const deliveryFee = items.every((i) => i.free_delivery) ? 0 : settingsDeliveryFee(DELIVERY_FEE);
   const createdAt = Date.now();
   const id = newOrderId();
   const order = {
