@@ -84,13 +84,14 @@ const Login = ({ onLogin }) => {
 };
 
 // ============== PRODUCT FORM (add / edit) ==============
-const emptyForm = (categories) => ({ name: "", name_en: "", description: "", brand: "", category: categories[0] ? categories[0].id : "", skin_type: [], price: "", sale_price: "", free_delivery: false });
+const emptyForm = () => ({ name: "", name_en: "", description: "", brand: "", category: "", skin_type: [], price: "", sale_price: "", free_delivery: false });
 
 const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
   const editing = !!initial;
   const [form, setForm] = useState(() => (initial
-    ? { ...emptyForm(data.categories), ...initial, price: String(initial.price ?? ""), sale_price: initial.sale_price ? String(initial.sale_price) : "" }
-    : emptyForm(data.categories)));
+    ? { ...emptyForm(), ...initial, price: String(initial.price ?? ""), sale_price: initial.sale_price ? String(initial.sale_price) : "" }
+    : emptyForm()));
+  const [aiCategory, setAiCategory] = useState("");
   const [file, setFile] = useState(null);
   const [original, setOriginal] = useState("");
   const [processed, setProcessed] = useState("");
@@ -147,10 +148,14 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
           name_en: r.name_en || form.name_en,
           description: r.description_ar || form.description,
           brand: r.brand || form.brand,
-          category: data.categories.some((c) => c.id === r.category) ? r.category : form.category,
           skin_type: Array.isArray(r.skin_type) ? r.skin_type.filter((s) => data.skinTypes.some((t) => t.id === s)) : form.skin_type,
           ...(r.suggested_price_iqd > 0 && !form.price ? { price: String(r.suggested_price_iqd) } : {}),
         });
+        // the AI only suggests a section; the admin's own pick always wins
+        if (data.categories.some((c) => c.id === r.category)) {
+          setAiCategory(r.category);
+          setForm((f) => (f.category ? f : { ...f, category: r.category }));
+        }
         if (r.suggested_price_iqd > 0) {
           newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — اقتراح من الذكاء الاصطناعي، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
         } else {
@@ -175,6 +180,7 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
     if (!form.name.trim()) return setError("اكتب اسم المنتج بالعربي.");
     if (!Number.isFinite(price) || price < 0 || form.price === "") return setError("اكتب السعر.");
     if (!editing && !processed && !original) return setError("اختر صورة للمنتج.");
+    if (!form.category) return setError("اختار القسم اللي ينضاف له المنتج.");
     setError("");
     const product = {
       name: form.name.trim(),
@@ -216,7 +222,7 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
           {status && <p className="text-sm text-pink-600 mt-2" data-testid="admin-ai-status">{status}</p>}
           {processed && removed && <p className="text-sm text-green-600 mt-2" data-testid="admin-bg-removed">✓ الصورة جاهزة بخلفية بيضاء</p>}
           {notes.map((n) => <p key={n} className="text-sm text-amber-600 mt-2" data-testid="admin-ai-note">{n}</p>)}
-          <p className="text-xs text-gray-500 mt-2 leading-relaxed">الزر يشيل خلفية الصورة ويخليها بيضاء، ويقرأ العلبة حتى يكتب الاسم بالعربي والإنجليزي والوصف. أنت بس تكتب السعر.</p>
+          <p className="text-xs text-gray-500 mt-2 leading-relaxed">الزر يشيل خلفية الصورة ويخليها بيضاء، ويقرأ العلبة حتى يكتب الاسم بالعربي والإنجليزي والوصف. أنت تراجع السعر وتختار القسم.</p>
         </div>
 
         <div className="space-y-3">
@@ -242,19 +248,25 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
               <input value={form.sale_price} onChange={(e) => set({ sale_price: e.target.value.replace(/[^\d]/g, "") })} inputMode="numeric" dir="ltr" placeholder="اختياري" className={inputCls} data-testid="admin-old-price" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">القسم</label>
-              <select value={form.category} onChange={(e) => set({ category: e.target.value })} className={inputCls} data-testid="admin-category">
-                <option value="best-selling">الأكثر طلباً</option>
-                <option value="offers">العروض</option>
-                {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الماركة</label>
-              <input value={form.brand} onChange={(e) => set({ brand: e.target.value })} dir="ltr" className={inputCls} data-testid="admin-brand" />
-            </div>
+          <div className="rounded-2xl border-2 border-pink-200 bg-pink-50/50 p-3">
+            <label className="block text-sm font-bold text-gray-800 mb-1">القسم اللي ينضاف له المنتج *</label>
+            <select value={form.category} onChange={(e) => set({ category: e.target.value })} className={`${inputCls} bg-white`} data-testid="admin-category">
+              <option value="">— اختار القسم —</option>
+              <option value="best-selling">الأكثر طلباً</option>
+              <option value="offers">العروض</option>
+              {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            {aiCategory && (
+              <p className="text-xs text-gray-600 mt-1.5" data-testid="admin-ai-category">
+                {aiCategory === form.category
+                  ? "هذا القسم اقتراح من الذكاء الاصطناعي، تگدر تغيّره."
+                  : `اقتراح الذكاء الاصطناعي: ${(data.categories.find((c) => c.id === aiCategory) || {}).name || aiCategory}، بس اختيارك هو اللي ينحفظ.`}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">الماركة</label>
+            <input value={form.brand} onChange={(e) => set({ brand: e.target.value })} dir="ltr" className={inputCls} data-testid="admin-brand" />
           </div>
           <div>
             <span className="block text-sm font-medium text-gray-700 mb-1.5">أنواع البشرة</span>
