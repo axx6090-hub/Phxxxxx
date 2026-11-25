@@ -18,16 +18,9 @@ export const DEFAULT_SETTINGS = {
     { name: "سيروم", to: "/collection/category-serum" },
     { name: "غسول", to: "/collection/category-cleansers" },
   ],
-  banners: [
-    { img: "https://barbiephar.com/cdn/shop/files/2_6d2a305d-94d7-4512-867c-feb17cb5fff1.jpg?v=1778683647", link: "/collection/offers", title: "بلاك فرايدي", subtitle: "خصومات تصل لـ 52%" },
-    { img: "https://barbiephar.com/cdn/shop/files/bshrtg-tdoy.jpg?v=1775080334&width=1100", link: "/product/offer-89", title: "بشرتج تضوي", subtitle: "مجموعة الحلزون" },
-  ],
-  features: [
-    { title: "توصيل لكل العراق", desc: "5,000 د.ع لكافة المحافظات" },
-    { title: "منتجات أصلية", desc: "مضمونة 100% من المصدر" },
-    { title: "أكثر من 500,000", desc: "عميلة سعيدة" },
-    { title: "استشارة", desc: "تواصلي عبر واتساب" },
-  ],
+  // Empty by default: the home page shows no banner until the admin adds one.
+  banners: [],
+  features: [],
 };
 
 export const mergeSettings = (saved) => {

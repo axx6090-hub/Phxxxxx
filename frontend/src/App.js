@@ -584,6 +584,8 @@ const Home = () => {
 
   return (
     <>
+      <Hero />
+      <FeatureStrip />
       <ProductSection title="الأكثر طلباً" emoji="⭐" category="best-selling" viewAllLink="/collection/best-selling" />
       <CategoriesSection />
       <ProductSection title="عرض حصري" emoji="💎" category="offers" viewAllLink="/collection/offers" />

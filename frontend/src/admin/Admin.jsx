@@ -503,8 +503,12 @@ const Panel = ({ token, initial, onLogout }) => {
             <button type="submit" className={`${btnPrimary} flex items-center justify-center gap-1`} data-testid="admin-cat-add"><Plus size={18} /> إضافة</button>
           </form>
           <div className="space-y-2">
-            {data.categories.map((c) => (
+            {data.categories.map((c, ci) => (
               <div key={c.id} className="flex items-center gap-3 bg-white border border-pink-100 rounded-2xl p-3" data-testid={`admin-cat-${c.id}`}>
+                <div className="flex flex-col shrink-0">
+                  <button type="button" disabled={ci === 0} onClick={() => change((d) => { const a = d.categories; [a[ci - 1], a[ci]] = [a[ci], a[ci - 1]]; return d; })} className="text-gray-400 hover:text-pink-600 disabled:opacity-30 text-xs leading-none p-0.5" aria-label="لفوك">▲</button>
+                  <button type="button" disabled={ci === data.categories.length - 1} onClick={() => change((d) => { const a = d.categories; [a[ci + 1], a[ci]] = [a[ci], a[ci + 1]]; return d; })} className="text-gray-400 hover:text-pink-600 disabled:opacity-30 text-xs leading-none p-0.5" aria-label="لجوه">▼</button>
+                </div>
                 <input value={c.emoji || ""} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).emoji = e.target.value; return d; })} maxLength={4} aria-label="إيموجي القسم" className="w-11 h-11 rounded-xl bg-pink-50 text-center text-2xl shrink-0 outline-none focus:ring-2 focus:ring-pink-300" />
                 <div className="flex-1 min-w-0">
                   <input value={c.name} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).name = e.target.value; return d; })} aria-label="اسم القسم" className="w-full font-semibold text-sm text-gray-900 bg-transparent border-b border-transparent hover:border-pink-200 focus:border-pink-400 outline-none" data-testid={`admin-cat-rename-${c.id}`} />
@@ -517,7 +521,7 @@ const Panel = ({ token, initial, onLogout }) => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500">تكدر تغيّر اسم القسم والإيموجي مباشرة من القائمة. القسم اللي بيه منتجات ما ينحذف — احذف منتجاته أو انقلها لقسم ثاني أولاً.</p>
+          <p className="text-xs text-gray-500">تكدر تغيّر اسم القسم والإيموجي وترتيبه (الأسهم) مباشرة من القائمة. القسم اللي بيه منتجات ما ينحذف — احذف منتجاته أو انقلها لقسم ثاني أولاً.</p>
         </div>
       )}
 
