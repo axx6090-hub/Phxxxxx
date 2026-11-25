@@ -56,7 +56,7 @@ const playDing = () => {
 const showLocalNotification = async (order) => {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
   const title = `🛍️ طلب جديد #${order.id}`;
-  const body = `${order.customer.name || "زبون"} · ${formatPrice(order.total)} · ${order.customer.city || ""}`;
+  const body = `${order.customer.name || order.customer.phone || "زبون"} · ${formatPrice(order.total)}${order.customer.delivery === false ? " · بدون توصيل" : ""}`;
   try {
     const reg = navigator.serviceWorker && (await navigator.serviceWorker.getRegistration());
     if (reg) return reg.showNotification(title, { body, tag: `order-${order.id}`, icon: "./icon-192.png", data: { url: window.location.href } });
@@ -163,7 +163,7 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
             {isNew && <span className="text-xs font-bold text-pink-600">● جديد</span>}
           </div>
-          <p className="text-xs text-gray-500 mt-1 truncate">{order.customer.name || "بدون اسم"} · {order.customer.city || "—"} · {formatDate(order.createdAt)}</p>
+          <p className="text-xs text-gray-500 mt-1 truncate">{order.customer.name || order.customer.phone || "—"} · {order.customer.delivery === false ? "بدون توصيل" : (order.customer.city || "توصيل")} · {formatDate(order.createdAt)}</p>
         </div>
         <span className="font-bold text-pink-600 shrink-0">{formatPrice(order.total)}</span>
         <ChevronDown size={18} className={`text-gray-400 shrink-0 transition ${open ? "rotate-180" : ""}`} />
@@ -173,7 +173,8 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
         <div className="border-t border-pink-100 p-4 space-y-4 text-sm">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <p><span className="text-gray-500">الاسم: </span>{order.customer.name || "—"}</p>
+              {order.customer.name && <p><span className="text-gray-500">الاسم: </span>{order.customer.name}</p>}
+              <p><span className="text-gray-500">التوصيل: </span>{order.customer.delivery === false ? "بدون توصيل (استلام)" : "توصيل"}</p>
               <p><span className="text-gray-500">الهاتف: </span><span dir="ltr">{order.customer.phone || "—"}</span></p>
               <p><span className="text-gray-500">العنوان: </span>{[order.customer.city, order.customer.address].filter(Boolean).join(" - ") || "—"}</p>
               {order.customer.notes && <p className="whitespace-pre-line"><span className="text-gray-500">ملاحظات: </span>{order.customer.notes}</p>}

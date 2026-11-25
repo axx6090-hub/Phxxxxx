@@ -59,7 +59,8 @@ const openPendingTab = () => {
   } catch (e) { /* ignore */ }
   return win;
 };
-const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - flat fee for all Iraqi governorates (admin panel)
+const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - delivery to the other governorates (admin panel)
+const deliverySummary = () => `توصيل اختياري بـ ${formatPrice(DELIVERY_FEE)}`;
 
 const formatPrice = (n) => Number(n).toLocaleString("en-US") + " د.ع";
 
@@ -359,7 +360,7 @@ const CartDrawer = () => {
                 <MessageCircle size={20} /> إتمام الطلب عبر واتساب
               </button>
               <p className="text-xs text-gray-500 text-center mt-3">
-                {deliveryFee === 0 ? "🎉 توصيل مجاني لهذا الطلب" : `+ ${formatPrice(deliveryFee)} رسوم توصيل لكافة المحافظات`}
+                {deliveryFee === 0 ? "🎉 توصيل مجاني لهذا الطلب" : `+ رسوم التوصيل: ${deliverySummary()}`}
               </p>
             </div>
           </>
@@ -802,7 +803,7 @@ const ProductDetail = () => {
           )}
 
           <div className="border-t border-pink-100 pt-5 space-y-3 text-sm">
-            <div className="flex items-center gap-2 text-gray-700"><Truck size={18} className="text-pink-600" /> توصيل لكافة محافظات العراق بـ {formatPrice(DELIVERY_FEE)}</div>
+            <div className="flex items-center gap-2 text-gray-700"><Truck size={18} className="text-pink-600" /> {deliverySummary()}</div>
             <div className="flex items-center gap-2 text-gray-700"><ShieldCheck size={18} className="text-pink-600" /> منتج أصلي 100% مضمون</div>
             {isFreeNoWhatsApp ? (
               <div className="flex items-center gap-2 text-gray-700"><Sparkles size={18} className="text-pink-600" /> انسخي الوصف واستخدميه مجاناً</div>
@@ -855,31 +856,44 @@ const WishlistPage = () => {
 };
 
 // ============== CHECKOUT (WhatsApp redirect) ==============
+const fieldCls = "w-full border-2 border-pink-100 focus:border-pink-400 outline-none rounded-2xl px-4 py-3.5 bg-white text-base transition";
+
 const Checkout = () => {
-  const { items, totalPrice, clearCart, deliveryFee } = useCart();
+  const { items, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  const [form, setForm] = useState(() => ({ name: "", phone: "", city: "", address: "", ...loadCustomer(), notes: "" }));
+  const [form, setForm] = useState(() => {
+    const saved = loadCustomer();
+    return { phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
+  });
   const [sent, setSent] = useState(false);
   const [orderUrl, setOrderUrl] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [receipt, setReceipt] = useState(null); // { id, items, subtotal, deliveryFee, total, saved, whatsappOpened }
+  const [receipt, setReceipt] = useState(null); // { id, items, subtotal, deliveryFee, delivery, total, saved, whatsappOpened }
   const isKidsVideoOnly = items.length > 0 && items.every((item) => item.id === "kids-video-design");
+  const allFree = items.length > 0 && items.every((i) => i.free_delivery);
+  // delivery is optional: the fee applies only when the customer asks for it
+  const deliveryFee = !form.delivery || allFree ? 0 : DELIVERY_FEE;
+  const addressRequired = form.delivery && !isKidsVideoOnly;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (items.length === 0 || submitting) return;
 
-    const phoneRequired = !isKidsVideoOnly;
-    if ((phoneRequired || form.phone.trim()) && !isIraqiPhone(form.phone)) {
-      setPhoneError("أدخلي رقم هاتف عراقي صحيح مكوّن من 11 رقم، مثل 07701234567");
+    if ((!isKidsVideoOnly || form.phone.trim()) && !isIraqiPhone(form.phone)) {
+      setPhoneError("اكتبي رقم هاتف عراقي صحيح من 11 رقم، مثل 07701234567");
+      return;
+    }
+    if (addressRequired && !form.address.trim()) {
+      setSubmitError("اكتبي العنوان حتى نوصل الطلب");
       return;
     }
     setPhoneError("");
     setSubmitError("");
     const phone = form.phone.trim() ? normalizeIraqiPhone(form.phone) : "";
-    const customer = { name: form.name.trim(), phone, city: form.city, address: form.address.trim(), notes: form.notes.trim() };
+    const deliveryLabel = form.delivery ? "توصيل" : "بدون توصيل (استلام)";
+    const customer = { name: "", phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
 
     // 1) open the WhatsApp tab now, while we still have the tap
     const pendingTab = openPendingTab();
@@ -908,20 +922,19 @@ const Checkout = () => {
     const orderSubtotal = saved ? saved.subtotal : totalPrice;
     const orderDelivery = saved ? saved.deliveryFee : deliveryFee;
     const grandTotal = orderSubtotal + orderDelivery;
-    const deliveryLine = orderDelivery === 0
-      ? "🚚 التوصيل: مجاني 🎉"
-      : `🚚 التوصيل (كل المحافظات): ${formatPrice(orderDelivery)}`;
+    const deliveryLine = !form.delivery
+      ? "🚚 بدون توصيل (استلام)"
+      : orderDelivery === 0 ? "🚚 التوصيل: مجاني" : `🚚 التوصيل: ${formatPrice(orderDelivery)}`;
     const lines = [
       `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
       saved ? `🧾 رقم الطلب: ${saved.id}` : null,
       "━━━━━━━━━━━━━━━",
       "",
-      "👤 بيانات الزبونة",
-      `• الاسم: ${form.name || "غير مذكور"}`,
+      "📞 بيانات التوصيل",
       `• الهاتف: ${phone || "غير مذكور"}`,
-      `• المحافظة: ${form.city || "غير مذكور"}`,
-      `• العنوان: ${form.address || "غير مذكور"}`,
-      form.notes ? `• ملاحظات: ${form.notes}` : null,
+      `• التوصيل: ${deliveryLabel}`,
+      `• العنوان: ${form.address.trim() || "غير مذكور"}`,
+      form.notes.trim() ? `• ملاحظات: ${form.notes.trim()}` : null,
       "",
       "━━━━━━━━━━━━━━━",
       "🛍️ تفاصيل الطلب",
@@ -935,9 +948,9 @@ const Checkout = () => {
       "━━━━━━━━━━━━━━━",
       "",
       "شكراً لطلبكم 💕"
-    ].filter(Boolean).join("\n");
+    ].filter((l) => l !== null).join("\n");
 
-    saveCustomer({ name: form.name, phone, city: form.city, address: form.address });
+    saveCustomer({ phone, delivery: form.delivery, address: form.address.trim() });
     const url = buildWhatsAppUrl(lines);
 
     // 3) send the WhatsApp tab to the chat. If the browser blocked the tab (Instagram/TikTok
@@ -953,7 +966,7 @@ const Checkout = () => {
       return;
     }
 
-    setReceipt({ id: saved ? saved.id : null, items: orderItems, subtotal: orderSubtotal, deliveryFee: orderDelivery, total: grandTotal, saved: !!saved, whatsappOpened });
+    setReceipt({ id: saved ? saved.id : null, items: orderItems, subtotal: orderSubtotal, deliveryFee: orderDelivery, delivery: form.delivery, total: grandTotal, saved: !!saved, whatsappOpened });
     setOrderUrl(url);
     setSent(true);
     setSubmitting(false);
@@ -963,10 +976,10 @@ const Checkout = () => {
 
   if (sent && receipt) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-12" data-testid="order-sent">
+      <div className="max-w-xl mx-auto px-4 py-10" data-testid="order-sent">
         <div className="text-center mb-7">
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-green-100 flex items-center justify-center text-4xl">✅</div>
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{receipt.saved ? "تم استلام طلبج" : "طلبج جاهز للإرسال"}</h1>
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{receipt.saved ? "تم استلام طلبج" : "طلبج جاهز"}</h1>
           {receipt.saved ? (
             <>
               <p className="text-gray-600 mb-3">شكراً إلج 💕 راح نتواصل وياج قريباً لتأكيد الطلب والتوصيل.</p>
@@ -976,7 +989,9 @@ const Checkout = () => {
               </div>
             </>
           ) : (
-            <p className="text-gray-600 leading-relaxed">ما قدرنا نحفظ الطلب بالموقع هسه، فأرسليه على واتساب حتى يوصلنا.</p>
+            <p className="text-gray-600 leading-relaxed">
+              {receipt.whatsappOpened ? "فتحنالج واتساب ورسالة الطلب مكتوبة، بس اضغطي «إرسال» 💕" : "اضغطي الزر الأخضر حتى يوصلنا طلبج على واتساب 💕"}
+            </p>
           )}
         </div>
 
@@ -984,21 +999,18 @@ const Checkout = () => {
           <div className="space-y-2 mb-4">
             {receipt.items.map((i) => (
               <div key={i.id} className="flex justify-between gap-3 text-sm">
-                <span className="text-gray-700">{i.name} <span className="text-gray-400">× {i.qty}</span></span>
+                <span className="text-gray-700 min-w-0">{i.name} <span className="text-gray-400">× {i.qty}</span></span>
                 <span className="font-semibold text-gray-800 shrink-0">{formatPrice(i.price * i.qty)}</span>
               </div>
             ))}
           </div>
           <div className="border-t border-pink-200 pt-3 space-y-1 text-sm">
-            <div className="flex justify-between text-gray-600"><span>التوصيل</span><span>{receipt.deliveryFee === 0 ? "مجاني" : formatPrice(receipt.deliveryFee)}</span></div>
+            <div className="flex justify-between text-gray-600"><span>التوصيل</span><span>{!receipt.delivery ? "بدون توصيل" : receipt.deliveryFee === 0 ? "مجاني" : formatPrice(receipt.deliveryFee)}</span></div>
             <div className="flex justify-between text-lg font-extrabold"><span>المبلغ الإجمالي</span><span className="text-pink-600">{formatPrice(receipt.total)}</span></div>
             <p className="text-xs text-gray-500 pt-1">💵 الدفع عند الاستلام</p>
           </div>
         </div>
 
-        {receipt.whatsappOpened && (
-          <p className="text-sm text-gray-600 text-center mb-3">فتحنالج واتساب ورسالة الطلب مكتوبة، اضغطي «إرسال» حتى يوصلنا أسرع. إذا ما انفتح استخدمي الزر:</p>
-        )}
         <a href={orderUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25d366] hover:bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition mb-3" data-testid="order-open-whatsapp">
           <MessageCircle size={22} /> {receipt.saved ? "تأكيد الطلب عبر واتساب" : "إرسال الطلب عبر واتساب"}
         </a>
@@ -1019,77 +1031,92 @@ const Checkout = () => {
     );
   }
 
+  const optional = isKidsVideoOnly ? <span className="text-gray-400 font-normal">(اختياري)</span> : null;
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-extrabold text-gray-900 mb-8">إتمام الطلب</h1>
-      <div className="grid lg:grid-cols-3 gap-8">
-        <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white rounded-3xl border border-pink-100 p-6 sm:p-8 space-y-5" data-testid="checkout-form">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">معلومات التوصيل</h2>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">إتمام الطلب</h1>
+      <p className="text-sm text-gray-500 mb-6">بس رقمج وعنوانج، والدفع عند الاستلام 💵</p>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <form onSubmit={handleSubmit} noValidate className="lg:col-span-3 min-w-0 bg-white rounded-3xl border border-pink-100 shadow-sm p-5 sm:p-7 space-y-5" data-testid="checkout-form">
           {isKidsVideoOnly && (
-            <p className="text-sm text-pink-600 bg-pink-50 rounded-xl p-3">طلب فيديو الأطفال لا يحتاج تعبئة البيانات؛ جميع الحقول أدناه اختيارية.</p>
+            <p className="text-sm text-pink-600 bg-pink-50 rounded-xl p-3">طلب فيديو الأطفال ما يحتاج بيانات توصيل، كل الحقول اختيارية.</p>
           )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">الاسم الكامل {isKidsVideoOnly ? "(اختياري)" : "*"}</label>
-            <input required={!isKidsVideoOnly} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: زينب أحمد" className="w-full border-2 border-pink-100 focus:border-pink-400 outline-none rounded-xl px-4 py-3" data-testid="checkout-name" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">رقم الهاتف {isKidsVideoOnly ? "(اختياري)" : "*"}</label>
-            <div className={`flex items-stretch border-2 rounded-xl overflow-hidden bg-white ${phoneError ? "border-red-400" : "border-pink-100 focus-within:border-pink-400"}`} dir="ltr">
-              <span className="flex items-center gap-1.5 px-3 bg-pink-50 text-gray-700 text-sm font-semibold border-r border-pink-100 select-none">🇮🇶 العراق</span>
-              <input required={!isKidsVideoOnly} value={form.phone} onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (phoneError) setPhoneError(""); }} onBlur={() => { if (form.phone.trim() && !isIraqiPhone(form.phone)) setPhoneError("أدخلي رقم هاتف عراقي صحيح مكوّن من 11 رقم، مثل 07701234567"); }} placeholder="07701234567" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} className="flex-1 min-w-0 outline-none px-4 py-3" data-testid="checkout-phone" />
+            <label className="block text-sm font-semibold text-gray-800 mb-2">رقم الهاتف {optional}</label>
+            <div className={`flex items-stretch border-2 rounded-2xl overflow-hidden bg-white transition ${phoneError ? "border-red-400" : "border-pink-100 focus-within:border-pink-400"}`} dir="ltr">
+              <span className="flex items-center gap-1.5 px-3 bg-pink-50 text-gray-700 text-sm font-semibold border-r border-pink-100 select-none shrink-0">🇮🇶 +964</span>
+              <input value={form.phone} onChange={(e) => { setForm({ ...form, phone: e.target.value }); if (phoneError) setPhoneError(""); }} onBlur={() => { if (form.phone.trim() && !isIraqiPhone(form.phone)) setPhoneError("اكتبي رقم هاتف عراقي صحيح من 11 رقم، مثل 07701234567"); }} placeholder="07701234567" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} className="flex-1 min-w-0 w-full outline-none px-4 py-3.5 text-base" data-testid="checkout-phone" />
             </div>
             {phoneError && <p className="text-red-500 text-xs mt-1.5" data-testid="checkout-phone-error">{phoneError}</p>}
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">المحافظة {isKidsVideoOnly ? "(اختياري)" : "*"}</label>
-            <select required={!isKidsVideoOnly} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full border-2 border-pink-100 focus:border-pink-400 outline-none rounded-xl px-4 py-3 bg-white" data-testid="checkout-city">
-              <option value="">اختاري المحافظة</option>
-              {["بغداد", "البصرة", "أربيل", "الموصل", "النجف", "كربلاء", "السليمانية", "كركوك", "بابل", "الأنبار", "ذي قار", "ديالى", "صلاح الدين", "ميسان", "واسط", "القادسية", "المثنى", "دهوك"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <p className="block text-sm font-semibold text-gray-800 mb-2">التوصيل</p>
+            <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="التوصيل">
+              {[
+                { on: true, label: "أريد توصيل", sub: allFree ? "مجاني" : `+ ${formatPrice(DELIVERY_FEE)}` },
+                { on: false, label: "بدون توصيل", sub: "أستلمه بنفسي" },
+              ].map((o) => {
+                const active = form.delivery === o.on;
+                return (
+                  <button
+                    key={String(o.on)}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setForm({ ...form, delivery: o.on })}
+                    className={`rounded-2xl border-2 px-3 py-3.5 text-center transition ${active ? "border-pink-500 bg-pink-50 shadow-sm" : "border-pink-100 bg-white hover:border-pink-300"}`}
+                    data-testid={`checkout-delivery-${o.on ? "yes" : "no"}`}
+                  >
+                    <span className={`block font-bold ${active ? "text-pink-700" : "text-gray-800"}`}>{o.label}</span>
+                    <span className="block text-xs text-gray-500 mt-1">{o.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">العنوان التفصيلي {isKidsVideoOnly ? "(اختياري)" : "*"}</label>
-            <input required={!isKidsVideoOnly} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="الحي، الشارع، أقرب نقطة دالة" className="w-full border-2 border-pink-100 focus:border-pink-400 outline-none rounded-xl px-4 py-3" data-testid="checkout-address" />
+            <label className="block text-sm font-semibold text-gray-800 mb-2">العنوان التفصيلي {addressRequired ? null : <span className="text-gray-400 font-normal">(اختياري)</span>}</label>
+            <input required={addressRequired} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="المنطقة، الشارع، أقرب نقطة دالة" autoComplete="street-address" className={fieldCls} data-testid="checkout-address" />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">ملاحظات (اختياري)</label>
-            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="أي ملاحظات إضافية على طلبج..." className="w-full border-2 border-pink-100 focus:border-pink-400 outline-none rounded-xl px-4 py-3 resize-none" data-testid="checkout-notes" />
+            <label className="block text-sm font-semibold text-gray-800 mb-2">ملاحظات <span className="text-gray-400 font-normal">(اختياري)</span></label>
+            <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="أي شي تحبين نعرفه عن طلبج..." className={`${fieldCls} resize-none`} data-testid="checkout-notes" />
+          </div>
+
+          <div className="rounded-2xl bg-pink-50/60 border border-pink-100 p-4 space-y-1.5 text-sm">
+            <div className="flex justify-between text-gray-600"><span>مجموع المنتجات</span><span>{formatPrice(totalPrice)}</span></div>
+            <div className="flex justify-between text-gray-600">
+              <span>التوصيل</span>
+              <span>{!form.delivery ? "بدون توصيل" : deliveryFee === 0 ? <span className="text-green-600 font-bold">مجاني</span> : formatPrice(deliveryFee)}</span>
+            </div>
+            <div className="flex justify-between text-lg font-extrabold pt-1.5 border-t border-pink-200"><span>المبلغ الإجمالي</span><span className="text-pink-600" data-testid="checkout-total">{formatPrice(totalPrice + deliveryFee)}</span></div>
           </div>
 
           {submitError && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
-          <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition" data-testid="submit-order">
+          <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
-          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد يوصلج رقم الطلب ونفتحلج واتساب لتأكيده</p>
+          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد ينفتح واتساب ويَّا رسالة الطلب</p>
         </form>
 
-        <aside className="bg-pink-50/50 rounded-3xl border border-pink-100 p-6 h-fit lg:sticky lg:top-28">
-          <h2 className="text-xl font-bold text-gray-800 mb-5">ملخص الطلب</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto mb-5">
+        <aside className="lg:col-span-2 min-w-0 bg-pink-50/50 rounded-3xl border border-pink-100 p-5 sm:p-6 h-fit lg:sticky lg:top-28">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">طلبج ({items.reduce((n, i) => n + i.qty, 0)})</h2>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
             {items.map((i) => (
               <div key={i.id} className="flex gap-3 items-start">
-                <img src={i.image} alt={i.name} className="w-14 h-14 rounded-lg object-cover bg-white" />
+                <img src={i.image} alt={i.name} className="w-14 h-14 rounded-xl object-cover bg-white shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium line-clamp-2">{i.name}</p>
                   <p className="text-xs text-gray-500 mt-1">{i.qty} × {formatPrice(i.price)}</p>
                 </div>
-                <p className="text-sm font-bold text-pink-600">{formatPrice(i.price * i.qty)}</p>
+                <p className="text-sm font-bold text-pink-600 shrink-0">{formatPrice(i.price * i.qty)}</p>
               </div>
             ))}
-          </div>
-          <div className="border-t border-pink-200 pt-4 space-y-2">
-            <div className="flex justify-between text-sm text-gray-600"><span>مجموع المنتجات</span><span>{formatPrice(totalPrice)}</span></div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>التوصيل</span>
-              {deliveryFee === 0 ? (
-                <span className="text-green-600 font-bold">مجاني 🎉</span>
-              ) : (
-                <span>{formatPrice(deliveryFee)}</span>
-              )}
-            </div>
-            <div className="flex justify-between text-lg font-extrabold pt-2 border-t border-pink-200"><span>المبلغ الإجمالي</span><span className="text-pink-600" data-testid="checkout-total">{formatPrice(totalPrice + deliveryFee)}</span></div>
           </div>
         </aside>
       </div>

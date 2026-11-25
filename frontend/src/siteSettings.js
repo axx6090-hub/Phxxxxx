@@ -5,7 +5,7 @@ import staticData from "./staticData.json";
 export const DEFAULT_SETTINGS = {
   storeName: "صيدلية أيمن",
   whatsapp: "9647832882348",
-  deliveryFee: 5000,
+  deliveryFee: 5000, // when the customer picks delivery at checkout (delivery is optional)
   announcement: "🚚 توصيل لكافة محافظات العراق بـ 5,000 د.ع فقط  •  ✨ منتجات أصلية 100%  •  💕 اطلبي الحين عبر واتساب",
   footerText: "براند مميز لمنتجات العناية بالبشرة في العراق - منتجات مضمونة وتوصيل سريع 💕",
   showSocialProof: true,

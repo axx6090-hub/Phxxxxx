@@ -121,7 +121,7 @@ export const SiteSettings = ({ settings, onChange, bannerPreviews, onBannerImage
             <input value={s.whatsapp} onChange={(e) => set({ whatsapp: e.target.value.replace(/[^\d]/g, "") })} dir="ltr" inputMode="numeric" placeholder="9647XXXXXXXXX" className={inputCls} data-testid="admin-whatsapp" />
           </div>
           <div>
-            <label className={labelCls}>سعر التوصيل (د.ع)</label>
+            <label className={labelCls}>سعر التوصيل (د.ع) — الزبون يختار التوصيل أو بدونه</label>
             <input value={String(s.deliveryFee)} onChange={(e) => set({ deliveryFee: Number(e.target.value.replace(/[^\d]/g, "") || 0) })} dir="ltr" inputMode="numeric" className={inputCls} data-testid="admin-delivery-fee" />
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-700 sm:pt-7">

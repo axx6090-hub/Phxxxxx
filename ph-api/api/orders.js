@@ -12,7 +12,6 @@ import { notifyNewOrder } from "../lib/notify.js";
 const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
 const ADMIN_URL = process.env.ADMIN_URL || "https://balyiq.site/#/admin";
 export const STATUSES = ["new", "confirmed", "shipped", "delivered", "cancelled"];
-const CITIES = ["بغداد", "البصرة", "أربيل", "الموصل", "النجف", "كربلاء", "السليمانية", "كركوك", "بابل", "الأنبار", "ذي قار", "ديالى", "صلاح الدين", "ميسان", "واسط", "القادسية", "المثنى", "دهوك"];
 
 const clean = (v, max) => String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 const cleanMultiline = (v, max) => String(v ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").trim().slice(0, max);
@@ -71,19 +70,18 @@ const createOrder = async (req) => {
     phone: normalizeIraqiPhone(c.phone),
     city: clean(c.city, 40),
     address: clean(c.address, 300),
+    delivery: c.delivery !== false, // delivery is optional at checkout
     notes: cleanMultiline(c.notes, 1000),
   };
   if (!kidsVideoOnly) {
-    if (!customer.name) throw new HttpError(400, "اكتب الاسم.");
     if (!isIraqiPhone(customer.phone)) throw new HttpError(400, "رقم الهاتف لازم يكون عراقي صحيح، مثل 07701234567.");
-    if (!CITIES.includes(customer.city)) throw new HttpError(400, "اختر المحافظة.");
-    if (!customer.address) throw new HttpError(400, "اكتب العنوان.");
+    if (customer.delivery && !customer.address) throw new HttpError(400, "اكتب العنوان.");
   } else if (customer.phone && !isIraqiPhone(customer.phone)) {
     throw new HttpError(400, "رقم الهاتف لازم يكون عراقي صحيح، مثل 07701234567.");
   }
 
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
-  const deliveryFee = items.every((i) => i.free_delivery) ? 0 : settingsDeliveryFee(DELIVERY_FEE);
+  const deliveryFee = !customer.delivery || items.every((i) => i.free_delivery) ? 0 : settingsDeliveryFee(DELIVERY_FEE);
   const createdAt = Date.now();
   const id = newOrderId();
   const order = {

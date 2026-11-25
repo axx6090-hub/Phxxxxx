@@ -71,7 +71,7 @@ export const notifyNewOrder = async (order, adminUrl) => {
   const [push, whatsapp] = await Promise.all([
     sendPush({
       title: `🛍️ طلب جديد #${order.id}`,
-      body: `${order.customer.name || "زبون"} · ${formatPrice(order.total)} · ${order.customer.city || ""}`.trim(),
+      body: `${order.customer.phone || "زبون"} · ${formatPrice(order.total)}${order.customer.delivery === false ? " · بدون توصيل" : ""}`,
       url: adminUrl,
       tag: `order-${order.id}`,
     }).catch((e) => ({ sent: 0, failed: 1, reason: e.message })),
