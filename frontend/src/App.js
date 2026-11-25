@@ -1146,7 +1146,7 @@ function App() {
   return (
     <CartProvider>
       <HashRouter>
-        <div dir="rtl" className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "'Tajawal', 'Cairo', sans-serif" }}>
+        <div dir="rtl" className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
           <Header />
           <main className="flex-1">
             <Routes>
