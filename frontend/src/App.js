@@ -452,7 +452,7 @@ const FeatureStrip = () => {
     { icon: Truck, title: "توصيل لكل العراق", desc: "5,000 د.ع لكافة المحافظات" },
     { icon: ShieldCheck, title: "منتجات أصلية", desc: "مضمونة 100% من المصدر" },
     { icon: Sparkles, title: "أكثر من 500,000", desc: "عميلة سعيدة" },
-    { icon: MessageCircle, title: "استشارة مجانية", desc: "تواصلي عبر واتساب" },
+    { icon: MessageCircle, title: "استشارة", desc: "تواصلي عبر واتساب" },
   ];
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -783,7 +783,7 @@ const ProductDetail = () => {
             {isFreeNoWhatsApp ? (
               <div className="flex items-center gap-2 text-gray-700"><Sparkles size={18} className="text-pink-600" /> انسخي الوصف واستخدميه مجاناً</div>
             ) : (
-              <div className="flex items-center gap-2 text-gray-700"><MessageCircle size={18} className="text-pink-600" /> استشارة مجانية عبر واتساب</div>
+              <div className="flex items-center gap-2 text-gray-700"><MessageCircle size={18} className="text-pink-600" /> استشارة عبر واتساب</div>
             )}
           </div>
         </div>
