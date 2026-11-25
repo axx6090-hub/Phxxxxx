@@ -149,7 +149,14 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
           brand: r.brand || form.brand,
           category: data.categories.some((c) => c.id === r.category) ? r.category : form.category,
           skin_type: Array.isArray(r.skin_type) ? r.skin_type.filter((s) => data.skinTypes.some((t) => t.id === s)) : form.skin_type,
+          ...(r.suggested_price_iqd > 0 && !form.price ? { price: String(r.suggested_price_iqd) } : {}),
         });
+        if (r.suggested_price_iqd > 0) {
+          newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — اقتراح من الذكاء الاصطناعي، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
+        } else {
+          newNotes.push(`ما لگينا سعر مضمون لهذا المنتج، فاكتب السعر بنفسك.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
+        }
+        if (!r.searched) newNotes.push("البحث بالإنترنت ما اشتغل بهذا المفتاح، فالمعلومات من معرفة الذكاء الاصطناعي فقط.");
         if (r.confident === false) newNotes.push("الكتابة على العلبة ما كانت واضحة، فراجع الاسم والوصف قبل الحفظ.");
       }
     } catch (err) {
@@ -270,8 +277,9 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
       </div>
 
       {error && <p className="text-red-600 text-sm" data-testid="admin-form-error">{error}</p>}
+      {!editing && <p className="text-xs text-gray-500">الذكاء الاصطناعي يعبّي البيانات بس، والمنتج ما ينضاف إلا لما توافق، وما يظهر للزباين إلا بعد «نشر التغييرات».</p>}
       <div className="flex gap-2">
-        <button type="submit" disabled={busy} className={btnPrimary} data-testid="admin-save-product">{editing ? "حفظ التعديل" : "إضافة المنتج"}</button>
+        <button type="submit" disabled={busy} className={btnPrimary} data-testid="admin-save-product">{editing ? "حفظ التعديل" : "موافقة وإضافة المنتج"}</button>
         {onCancel && <button type="button" onClick={onCancel} className={btnGhost}>إلغاء</button>}
       </div>
     </form>

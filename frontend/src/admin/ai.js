@@ -64,7 +64,7 @@ const opaqueBounds = (img) => {
 };
 
 /** Draws an image centered on a square white canvas. Returns a JPEG data URL. */
-const onWhiteSquare = (img, bounds, size = 900, padding = 0.08) => {
+const onWhiteSquare = (img, bounds, size = 900, padding = 0.08, clean = true) => {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -76,6 +76,7 @@ const onWhiteSquare = (img, bounds, size = 900, padding = 0.08) => {
   const w = bounds.w * scale;
   const h = bounds.h * scale;
   ctx.imageSmoothingQuality = "high";
+  if (clean) enhance(ctx);
   ctx.drawImage(img, bounds.x, bounds.y, bounds.w, bounds.h, (size - w) / 2, (size - h) / 2, w, h);
   return canvas.toDataURL("image/jpeg", 0.9);
 };
@@ -99,58 +100,28 @@ export const makeWhiteBackground = async (file, onProgress) => {
   } catch (error) {
     const img = await loadImage(await blobToDataUrl(file));
     const bounds = { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
-    return { dataUrl: onWhiteSquare(img, bounds, 900, 0), removed: false, error };
+    return { dataUrl: onWhiteSquare(img, bounds, 900, 0, false), removed: false, error };
   }
 };
 
-/**
- * Asks Claude to read the product photo and fill in the listing.
- * Returns { name_en, name_ar, description_ar, brand, category, skin_type, confident }.
- */
-export const analyzeProduct = async ({ apiKey, model, imageDataUrl, categories, skinTypes }) => {
-  const categoryList = categories.map((c) => `${c.id} = ${c.name}`).join("\n");
-  const skinList = skinTypes.map((s) => `${s.id} = ${s.name}`).join("\n");
-  const body = {
-    model: model || DEFAULT_AI_MODEL,
-    max_tokens: 1024,
-    tools: [
-      {
-        name: "save_product",
-        description: "Saves the product listing extracted from the photo.",
-        input_schema: {
-          type: "object",
-          properties: {
-            name_en: { type: "string", description: "Brand + product name + size exactly as printed on the pack, in English. Example: Cosrx Advanced Snail 92 All in One Cream 100g" },
-            name_ar: { type: "string", description: "Short Arabic product title for an Iraqi store, with the size. Example: كريم الحلزون كوزركس - 100غرام" },
-            description_ar: { type: "string", description: "2-3 short Arabic sentences: what the product is, what it is used for and how. No medical claims, no guarantees, nothing that is not supported by the pack." },
-            brand: { type: "string", description: "Brand name in English as printed." },
-            category: { type: "string", enum: categories.map((c) => c.id), description: "The best matching store category id." },
-            skin_type: { type: "array", items: { type: "string", enum: skinTypes.map((s) => s.id) }, description: "Skin types the product is meant for. Empty if it is not a face skincare product or the pack does not say." },
-            confident: { type: "boolean", description: "false if the text on the pack was unreadable and the answer is a guess." },
-          },
-          required: ["name_en", "name_ar", "description_ar", "brand", "category", "skin_type", "confident"],
-        },
-      },
-    ],
-    tool_choice: { type: "tool", name: "save_product" },
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: dataUrlToBase64(imageDataUrl) } },
-          {
-            type: "text",
-            text:
-              "This is a photo of a product for an Iraqi online beauty and skincare store. " +
-              "Read the text printed on the packaging and fill in the listing with the save_product tool. " +
-              "Describe only what the pack shows or what is generally known about this exact product.\n\n" +
-              `Store categories:\n${categoryList}\n\nSkin types:\n${skinList}`,
-          },
-        ],
-      },
-    ],
-  };
+/** Light clean-up so the product looks like a studio shot. */
+const enhance = (ctx) => {
+  if ("filter" in ctx) ctx.filter = "brightness(1.04) contrast(1.07) saturate(1.06)";
+};
 
+const SCHEMA_PROPS = (categories, skinTypes) => ({
+  name_en: { type: "string", description: "Brand + product name + size exactly as printed on the pack, in English. Example: Cosrx Advanced Snail 92 All in One Cream 100g" },
+  name_ar: { type: "string", description: "Short Arabic product title for an Iraqi store, with the size. Example: كريم الحلزون كوزركس - 100غرام" },
+  description_ar: { type: "string", description: "2-3 short Arabic sentences: what the product is, what it is used for and how. No medical claims, no guarantees, nothing that is not supported by the pack or by what is known about this exact product." },
+  brand: { type: "string", description: "Brand name in English as printed." },
+  category: { type: "string", enum: categories.map((c) => c.id), description: "The best matching store category id." },
+  skin_type: { type: "array", items: { type: "string", enum: skinTypes.map((s) => s.id) }, description: "Skin types the product is meant for. Empty if it is not a face skincare product or the pack does not say." },
+  suggested_price_iqd: { type: "integer", description: "Suggested selling price in Iraqi dinars, rounded to the nearest 250, based on what Iraqi shops sell this exact product for. 0 if you could not find a reasonable price." },
+  price_note_ar: { type: "string", description: "One short Arabic line on where the price came from (for example: متوسط أسعار متاجر عراقية) or why there is no price. Empty if no note is needed." },
+  confident: { type: "boolean", description: "false if the text on the pack was unreadable and the answer is a guess." },
+});
+
+const callClaude = async (apiKey, body) => {
   let res;
   try {
     res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -167,13 +138,86 @@ export const analyzeProduct = async ({ apiKey, model, imageDataUrl, categories, 
     throw new Error("تعذّر الاتصال بخدمة الذكاء الاصطناعي. تأكد من الإنترنت.");
   }
   if (!res.ok) {
-    if (res.status === 401) throw new Error("مفتاح الذكاء الاصطناعي غير صحيح.");
-    if (res.status === 429) throw new Error("تم تجاوز حد الاستخدام، حاول بعد قليل.");
-    if (res.status === 400 || res.status === 402 || res.status === 403) throw new Error("طلب الذكاء الاصطناعي مرفوض — تأكد من الرصيد وصلاحية المفتاح.");
-    throw new Error(`خطأ من خدمة الذكاء الاصطناعي (${res.status}).`);
+    const err = new Error(
+      res.status === 401 ? "مفتاح الذكاء الاصطناعي غير صحيح."
+        : res.status === 429 ? "تم تجاوز حد الاستخدام، حاول بعد قليل."
+        : res.status === 400 || res.status === 402 || res.status === 403 ? "طلب الذكاء الاصطناعي مرفوض — تأكد من الرصيد وصلاحية المفتاح."
+        : `خطأ من خدمة الذكاء الاصطناعي (${res.status}).`
+    );
+    err.status = res.status;
+    throw err;
   }
-  const json = await res.json();
-  const block = (json.content || []).find((b) => b.type === "tool_use");
-  if (!block || !block.input) throw new Error("الذكاء الاصطناعي ما رجّع بيانات المنتج. حاول بصورة أوضح.");
-  return block.input;
+  return res.json();
+};
+
+/**
+ * Asks Claude to read the product photo, look the product up on the web and
+ * fill in the listing. Nothing is saved here: the admin reviews the form and
+ * approves it. Returns { name_en, name_ar, description_ar, brand, category,
+ * skin_type, suggested_price_iqd, price_note_ar, confident, searched }.
+ */
+export const analyzeProduct = async ({ apiKey, model, imageDataUrl, categories, skinTypes }) => {
+  const chosen = model || DEFAULT_AI_MODEL;
+  const categoryList = categories.map((c) => `${c.id} = ${c.name}`).join("\n");
+  const skinList = skinTypes.map((s) => `${s.id} = ${s.name}`).join("\n");
+  const props = SCHEMA_PROPS(categories, skinTypes);
+  const prompt = (withSearch) =>
+    "This is a photo of a product for an Iraqi online beauty and skincare pharmacy. " +
+    "Read the text printed on the packaging and identify the exact product. " +
+    (withSearch
+      ? "Use web search to confirm what the product is and to find what shops in Iraq (or nearby, converted to IQD) sell it for. "
+      : "Suggest a price in IQD only if you know what this exact product usually sells for in Iraq; otherwise give 0. ") +
+    "Describe only what the pack shows or what is reliably known about this exact product. " +
+    "Answer with the JSON listing only.\n\n" +
+    `Store categories:\n${categoryList}\n\nSkin types:\n${skinList}`;
+
+  const baseBody = (withSearch) => ({
+    model: chosen,
+    max_tokens: 8000,
+    output_config: {
+      format: {
+        type: "json_schema",
+        schema: { type: "object", properties: props, required: Object.keys(props), additionalProperties: false },
+      },
+    },
+    ...(withSearch
+      ? { tools: [{ type: chosen.startsWith("claude-haiku") ? "web_search_20250305" : "web_search_20260209", name: "web_search", max_uses: 4 }] }
+      : {}),
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: dataUrlToBase64(imageDataUrl) } },
+          { type: "text", text: prompt(withSearch) },
+        ],
+      },
+    ],
+  });
+
+  const run = async (withSearch) => {
+    const body = baseBody(withSearch);
+    let json = await callClaude(apiKey, body);
+    // A long web search can pause the turn; let it carry on a couple of times.
+    for (let i = 0; i < 2 && json.stop_reason === "pause_turn"; i++) {
+      body.messages = [...body.messages, { role: "assistant", content: json.content }];
+      json = await callClaude(apiKey, body);
+    }
+    if (json.stop_reason === "refusal") throw new Error("الذكاء الاصطناعي رفض تحليل هذه الصورة.");
+    const texts = (json.content || []).filter((b) => b.type === "text").map((b) => b.text);
+    for (let i = texts.length - 1; i >= 0; i--) {
+      try {
+        const parsed = JSON.parse(texts[i]);
+        if (parsed && typeof parsed === "object") return { ...parsed, searched: withSearch };
+      } catch (e) { /* try the previous block */ }
+    }
+    throw new Error("الذكاء الاصطناعي ما رجّع بيانات المنتج. حاول بصورة أوضح.");
+  };
+
+  try {
+    return await run(true);
+  } catch (err) {
+    // Web search may be switched off for this API key; try once without it.
+    if (err.status === 400 || err.status === 403) return run(false);
+    throw err;
+  }
 };
