@@ -58,7 +58,7 @@ const Login = ({ onLogin }) => {
         <h1 className="text-2xl font-extrabold text-gray-900 mb-2">لوحة الأدمن 🔐</h1>
         <p className="text-gray-600 text-sm leading-relaxed mb-5">
           اللوحة تحفظ المنتجات مباشرة في مستودع المتجر على GitHub ({REPO_OWNER}/{REPO_NAME})، لذلك الدخول يكون برمز GitHub خاص بك.
-          الرمز ينحفظ بمتصفحك فقط وما ينرسل لأي مكان غير GitHub.
+          الرمز ينحفظ بمتصفحك فقط وما ينرسل لأي مكان غير GitHub وسيرفر المتجر نفسه.
         </p>
         <form onSubmit={submit} className="space-y-4">
           <div>
