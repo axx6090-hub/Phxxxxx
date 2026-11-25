@@ -309,7 +309,7 @@ const Panel = ({ token, initial, onLogout }) => {
 
   // show the number of new orders in the browser tab title
   useEffect(() => {
-    const base = "لوحة الأدمن | كليشة";
+    const base = "لوحة الأدمن | صيدلية أيمن";
     document.title = ordersState.unseen ? `(${ordersState.unseen}) طلب جديد — ${base}` : base;
   }, [ordersState.unseen]);
 

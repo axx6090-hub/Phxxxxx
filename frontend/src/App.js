@@ -193,7 +193,7 @@ const Header = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
               <div className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                <span className="text-[#e91e63]">كليشة</span>
+                <span className="text-[#e91e63]">صيدلية أيمن</span>
               </div>
             </Link>
 
@@ -253,7 +253,7 @@ const Header = () => {
         <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" onClick={() => setMenuOpen(false)}>
           <div className="absolute top-0 right-0 h-full w-80 max-w-[85%] bg-white p-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-8">
-              <span className="text-xl font-extrabold text-[#e91e63]">كليشة</span>
+              <span className="text-xl font-extrabold text-[#e91e63]">صيدلية أيمن</span>
               <button onClick={() => setMenuOpen(false)} data-testid="mobile-menu-close"><X size={24} /></button>
             </div>
             <nav className="flex flex-col gap-1 text-base">
@@ -888,7 +888,7 @@ const Checkout = () => {
       ? "🚚 التوصيل: مجاني 🎉"
       : `🚚 التوصيل (كل المحافظات): ${formatPrice(orderDelivery)}`;
     const lines = [
-      "🌸 طلب جديد - كليشة 🌸",
+      "🌸 طلب جديد - صيدلية أيمن 🌸",
       saved ? `🧾 رقم الطلب: ${saved.id}` : null,
       "━━━━━━━━━━━━━━━",
       "",
@@ -1077,7 +1077,7 @@ const Checkout = () => {
 const Footer = () => (
   <footer className="bg-gradient-to-br from-pink-900 via-rose-900 to-pink-950 text-pink-100 mt-16">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <h3 className="text-3xl font-extrabold mb-3"><span className="text-pink-300">كليشة</span></h3>
+      <h3 className="text-3xl font-extrabold mb-3"><span className="text-pink-300">صيدلية أيمن</span></h3>
       <p className="text-pink-200/80 text-sm max-w-xl mx-auto mb-6">براند مميز لمنتجات العناية بالبشرة في العراق - منتجات مضمونة وتوصيل سريع 💕</p>
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}`}
@@ -1088,7 +1088,7 @@ const Footer = () => (
         <MessageCircle size={18} /> تواصلي عبر واتساب
       </a>
       <div className="border-t border-pink-800/50 mt-8 pt-6 text-sm text-pink-300/70">
-        © 2026 كليشة - جميع الحقوق محفوظة
+        © 2026 صيدلية أيمن - جميع الحقوق محفوظة
       </div>
     </div>
   </footer>

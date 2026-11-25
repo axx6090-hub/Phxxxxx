@@ -195,7 +195,7 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
             {order.customer.phone && (
               <>
                 <a href={`tel:${order.customer.phone}`} className="inline-flex items-center gap-1.5 border border-gray-300 rounded-full px-3 py-1.5 font-semibold text-gray-700"><Phone size={15} /> اتصال</a>
-                <a href={`https://wa.me/${toWhatsApp(order.customer.phone)}?text=${encodeURIComponent(`هلا ${order.customer.name || ""} 🌸 بخصوص طلبج رقم ${order.id} من متجر كليشة`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#25d366] text-white rounded-full px-3 py-1.5 font-semibold"><MessageCircle size={15} /> واتساب الزبون</a>
+                <a href={`https://wa.me/${toWhatsApp(order.customer.phone)}?text=${encodeURIComponent(`هلا ${order.customer.name || ""} 🌸 بخصوص طلبج رقم ${order.id} من متجر صيدلية أيمن`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#25d366] text-white rounded-full px-3 py-1.5 font-semibold"><MessageCircle size={15} /> واتساب الزبون</a>
               </>
             )}
           </div>

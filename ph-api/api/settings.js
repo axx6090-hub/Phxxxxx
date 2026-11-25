@@ -41,7 +41,7 @@ export default route({
     await requireAdmin(req);
     if (!req.query?.test) throw new HttpError(400, "Unknown action");
     const settings = (await readJson(SETTINGS_PATH, {})) || {};
-    const result = await sendWhatsApp(settings, "🔔 تجربة: إشعارات طلبات متجر كليشة على الواتساب شغّالة ✅");
+    const result = await sendWhatsApp(settings, "🔔 تجربة: إشعارات طلبات متجر صيدلية أيمن على الواتساب شغّالة ✅");
     if (!result.sent) throw new HttpError(400, result.reason === "disabled" ? "فعّل إشعار الواتساب واحفظ أولاً." : `ما وصلت الرسالة: ${result.reason}`);
     return { ok: true };
   },
