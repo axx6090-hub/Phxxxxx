@@ -128,6 +128,10 @@ export const SiteSettings = ({ settings, onChange, bannerPreviews, onBannerImage
             <input type="checkbox" checked={!!s.showSocialProof} onChange={(e) => set({ showSocialProof: e.target.checked })} />
             إظهار عبارة «تم شراء X قطعة» (أرقامها تقديرية وعشوائية)
           </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={!!s.showRoutine} onChange={(e) => set({ showRoutine: e.target.checked })} data-testid="admin-show-routine" />
+            إظهار قسم «اختاري روتينج» بالصفحة الرئيسية
+          </label>
         </div>
         <div>
           <label className={labelCls}>الشريط اللي فوك الموقع</label>

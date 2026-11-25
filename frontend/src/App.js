@@ -620,7 +620,7 @@ const Home = () => {
       <Hero />
       <FeatureStrip />
       <ProductSection title="الأكثر طلباً" emoji="⭐" category="best-selling" viewAllLink="/collection/best-selling" />
-      <CategoriesSection />
+      {SETTINGS.showRoutine && <CategoriesSection />}
       <ProductSection title="عرض حصري" emoji="💎" category="offers" viewAllLink="/collection/offers" />
       {staticData.categories.filter((c) => c.home).map((c) => (
         <ProductSection key={c.id} title={c.name} emoji={c.emoji} category={c.id} viewAllLink={`/collection/category-${c.slug}`} />

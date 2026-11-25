@@ -9,6 +9,8 @@ export const DEFAULT_SETTINGS = {
   announcement: "🚚 توصيل لكافة محافظات العراق بـ 5,000 د.ع فقط  •  ✨ منتجات أصلية 100%  •  💕 اطلبي الحين عبر واتساب",
   footerText: "براند مميز لمنتجات العناية بالبشرة في العراق - منتجات مضمونة وتوصيل سريع 💕",
   showSocialProof: true,
+  // «اختاري روتينج» tiles on the home page; hidden unless the admin turns them back on.
+  showRoutine: false,
   navLinks: [
     { name: "العروض", to: "/collection/offers" },
     { name: "الأكثر طلباً", to: "/collection/best-selling" },
