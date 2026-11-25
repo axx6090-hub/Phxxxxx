@@ -9,6 +9,24 @@ import { SETTINGS } from "./siteSettings";
 
 const Admin = lazy(() => import("./admin/Admin"));
 
+// shows what went wrong in the admin panel instead of a blank page
+class AdminBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  componentDidCatch(error, info) { console.error("Admin panel error:", error, info && info.componentStack); }
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return (
+      <div className="max-w-lg mx-auto px-4 py-12 text-center" data-testid="admin-error">
+        <p className="text-lg font-bold text-gray-900 mb-2">صار خطأ بلوحة الأدمن</p>
+        <p className="text-sm text-red-600 break-words mb-4" dir="ltr">{String((error && error.message) || error)}</p>
+        <button type="button" onClick={() => window.location.reload()} className="px-5 py-2.5 rounded-full bg-pink-600 text-white font-semibold">حدّث الصفحة</button>
+      </div>
+    );
+  }
+}
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
@@ -1147,7 +1165,7 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense>} />
+              <Route path="/admin" element={<AdminBoundary><Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense></AdminBoundary>} />
             </Routes>
           </main>
           <Footer />
