@@ -1,0 +1,12 @@
+{
+  "name": "ph-orders-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Orders API and admin notifications for the Kaleesha store (axx6090-hub/Ph)",
+  "engines": { "node": "22.x" },
+  "dependencies": {
+    "@vercel/blob": "2.9.0",
+    "web-push": "4.0.0"
+  }
+}

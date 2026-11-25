@@ -1,0 +1,147 @@
+// POST   /api/orders            — customer places an order (public)
+// GET    /api/orders[?since=ms] — admin lists orders (newest first)
+// PATCH  /api/orders            — admin changes an order's status { key, status }
+// DELETE /api/orders?key=...    — admin deletes an order
+import { randomBytes } from "node:crypto";
+import { route, readBody, HttpError, clientIp } from "../lib/http.js";
+import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob } from "../lib/store.js";
+import { requireAdmin } from "../lib/auth.js";
+import { loadCatalog } from "../lib/catalog.js";
+import { notifyNewOrder } from "../lib/notify.js";
+
+const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
+const ADMIN_URL = process.env.ADMIN_URL || "https://axx6090-hub.github.io/Ph/#/admin";
+export const STATUSES = ["new", "confirmed", "shipped", "delivered", "cancelled"];
+const CITIES = ["بغداد", "البصرة", "أربيل", "الموصل", "النجف", "كربلاء", "السليمانية", "كركوك", "بابل", "الأنبار", "ذي قار", "ديالى", "صلاح الدين", "ميسان", "واسط", "القادسية", "المثنى", "دهوك"];
+
+const clean = (v, max) => String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+const cleanMultiline = (v, max) => String(v ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").trim().slice(0, max);
+
+const normalizeIraqiPhone = (value) => {
+  let v = String(value || "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^\d+]/g, "");
+  if (v.startsWith("+964")) v = "0" + v.slice(4);
+  else if (v.startsWith("00964")) v = "0" + v.slice(5);
+  else if (v.startsWith("964")) v = "0" + v.slice(3);
+  if (/^7\d{9}$/.test(v)) v = "0" + v;
+  return v;
+};
+const isIraqiPhone = (v) => /^07[3-9]\d{8}$/.test(v);
+
+// Order numbers like K7Q3-9F2A: short, easy to read over the phone, no 0/O/1/I.
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const newOrderId = () => {
+  const bytes = randomBytes(8);
+  const chars = [...bytes].map((b) => ALPHABET[b % ALPHABET.length]).join("");
+  return `${chars.slice(0, 4)}-${chars.slice(4, 8)}`;
+};
+
+// best-effort spam protection per server instance
+const recent = new Map();
+const rateLimit = (ip) => {
+  const now = Date.now();
+  const hits = (recent.get(ip) || []).filter((t) => now - t < 10 * 60 * 1000);
+  if (hits.length >= 8) throw new HttpError(429, "طلبات كثيرة من نفس الجهاز، حاول بعد دقائق.");
+  hits.push(now);
+  recent.set(ip, hits);
+};
+
+const createOrder = async (req) => {
+  rateLimit(clientIp(req));
+  const body = readBody(req);
+  const rawItems = Array.isArray(body.items) ? body.items.slice(0, 50) : [];
+  if (!rawItems.length) throw new HttpError(400, "السلة فارغة.");
+
+  const catalog = await loadCatalog();
+  let unverified = false;
+  const items = rawItems.map((it) => {
+    const id = clean(it.id, 120);
+    const qty = Math.max(1, Math.min(99, Math.floor(Number(it.qty) || 1)));
+    const product = catalog && catalog.get(id);
+    if (!product) unverified = true;
+    const price = product ? Number(product.price) || 0 : Math.max(0, Math.round(Number(it.price) || 0));
+    const name = product ? product.name : clean(it.name, 200);
+    const freeDelivery = product ? !!product.free_delivery : !!it.free_delivery;
+    return { id, name, price, qty, lineTotal: price * qty, free_delivery: freeDelivery };
+  });
+
+  const kidsVideoOnly = items.every((i) => i.id === "kids-video-design");
+  const c = body.customer || {};
+  const customer = {
+    name: clean(c.name, 80),
+    phone: normalizeIraqiPhone(c.phone),
+    city: clean(c.city, 40),
+    address: clean(c.address, 300),
+    notes: cleanMultiline(c.notes, 1000),
+  };
+  if (!kidsVideoOnly) {
+    if (!customer.name) throw new HttpError(400, "اكتب الاسم.");
+    if (!isIraqiPhone(customer.phone)) throw new HttpError(400, "رقم الهاتف لازم يكون عراقي صحيح، مثل 07701234567.");
+    if (!CITIES.includes(customer.city)) throw new HttpError(400, "اختر المحافظة.");
+    if (!customer.address) throw new HttpError(400, "اكتب العنوان.");
+  } else if (customer.phone && !isIraqiPhone(customer.phone)) {
+    throw new HttpError(400, "رقم الهاتف لازم يكون عراقي صحيح، مثل 07701234567.");
+  }
+
+  const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
+  const deliveryFee = items.every((i) => i.free_delivery) ? 0 : DELIVERY_FEE;
+  const createdAt = Date.now();
+  const id = newOrderId();
+  const order = {
+    id,
+    key: orderKey(createdAt, id),
+    createdAt: new Date(createdAt).toISOString(),
+    status: "new",
+    customer,
+    items: items.map(({ free_delivery, ...rest }) => rest),
+    subtotal,
+    deliveryFee,
+    total: subtotal + deliveryFee,
+    pricesVerified: !unverified,
+  };
+  await writeJson(order.key, order);
+
+  let notified = null;
+  try {
+    notified = await notifyNewOrder(order, ADMIN_URL);
+  } catch (e) {
+    console.error("notify failed", e);
+  }
+  if (notified) {
+    order.notified = { push: notified.push?.sent || 0, whatsapp: !!notified.whatsapp?.sent };
+    await writeJson(order.key, order).catch(() => {});
+  }
+  return { ok: true, id: order.id, items: order.items, subtotal, deliveryFee, total: order.total };
+};
+
+const listOrders = async (req) => {
+  await requireAdmin(req);
+  const since = Number(req.query?.since) || 0;
+  const limit = Math.min(200, Number(req.query?.limit) || 100);
+  const keys = await listOrderKeys(limit);
+  const orders = (await Promise.all(keys.map((k) => readJson(k).catch(() => null)))).filter(Boolean);
+  const filtered = since ? orders.filter((o) => Date.parse(o.createdAt) > since) : orders;
+  return { orders: filtered, serverTime: Date.now() };
+};
+
+const updateOrder = async (req) => {
+  await requireAdmin(req);
+  const { key, status } = readBody(req);
+  if (!ORDER_KEY_RE.test(String(key))) throw new HttpError(400, "طلب غير معروف.");
+  if (!STATUSES.includes(status)) throw new HttpError(400, "حالة غير صحيحة.");
+  const order = await readJson(key);
+  if (!order) throw new HttpError(404, "الطلب غير موجود.");
+  order.status = status;
+  order.updatedAt = new Date().toISOString();
+  await writeJson(key, order);
+  return { ok: true, order };
+};
+
+const removeOrder = async (req) => {
+  await requireAdmin(req);
+  const key = String(req.query?.key || "");
+  if (!ORDER_KEY_RE.test(key)) throw new HttpError(400, "طلب غير معروف.");
+  await deleteBlob(key);
+  return { ok: true };
+};
+
+export default route({ POST: createOrder, GET: listOrders, PATCH: updateOrder, DELETE: removeOrder });
