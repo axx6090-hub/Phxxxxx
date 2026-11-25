@@ -7,7 +7,22 @@ import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
 
-const Admin = lazy(() => import("./admin/Admin"));
+// After a new deploy the browser may still hold the old page, whose admin file no longer
+// exists. In that case reload once from the server instead of showing a blank page.
+const RELOAD_KEY = "admin_chunk_reload";
+const freshReload = () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("r", Date.now().toString(36));
+  window.location.replace(url.toString());
+};
+const Admin = lazy(() => import("./admin/Admin")
+  .then((m) => { try { sessionStorage.removeItem(RELOAD_KEY); } catch (e) { /* ignore */ } return m; })
+  .catch((err) => {
+    let reloaded = false;
+    try { reloaded = sessionStorage.getItem(RELOAD_KEY) === "1"; sessionStorage.setItem(RELOAD_KEY, "1"); } catch (e) { /* ignore */ }
+    if (!reloaded) { freshReload(); return new Promise(() => {}); }
+    throw err;
+  }));
 
 // shows what went wrong in the admin panel instead of a blank page
 class AdminBoundary extends React.Component {
