@@ -1,5 +1,5 @@
 // Small HTTP helpers shared by every endpoint.
-const DEFAULT_ORIGINS = ["https://axx6090-hub.github.io"];
+const DEFAULT_ORIGINS = ["https://balyiq.site", "https://www.balyiq.site"];
 
 const allowedOrigins = () =>
   (process.env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(","))

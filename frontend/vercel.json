@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "create-react-app",
   "installCommand": "yarn install --frozen-lockfile",
-  "buildCommand": "CI=false PUBLIC_URL=/ yarn build",
+  "buildCommand": "cp src/staticData.json public/staticData.json && CI=false PUBLIC_URL=/ yarn build",
   "outputDirectory": "build"
 }

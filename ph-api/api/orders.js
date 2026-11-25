@@ -10,7 +10,7 @@ import { loadCatalog } from "../lib/catalog.js";
 import { notifyNewOrder } from "../lib/notify.js";
 
 const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
-const ADMIN_URL = process.env.ADMIN_URL || "https://axx6090-hub.github.io/Ph/#/admin";
+const ADMIN_URL = process.env.ADMIN_URL || "https://balyiq.site/#/admin";
 export const STATUSES = ["new", "confirmed", "shipped", "delivered", "cancelled"];
 const CITIES = ["بغداد", "البصرة", "أربيل", "الموصل", "النجف", "كربلاء", "السليمانية", "كركوك", "بابل", "الأنبار", "ذي قار", "ديالى", "صلاح الدين", "ميسان", "واسط", "القادسية", "المثنى", "دهوك"];
 

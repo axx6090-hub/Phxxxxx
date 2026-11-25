@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { HttpError } from "./http.js";
 
-const REPO = process.env.STORE_REPO || "axx6090-hub/Ph";
+const REPO = process.env.STORE_REPO || "axx6090-hub/Phxxxxx";
 const cache = new Map(); // sha256(token) -> expiry ms
 
 export const requireAdmin = async (req) => {

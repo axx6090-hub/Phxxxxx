@@ -1,6 +1,6 @@
 // Reads the live product catalog so prices are checked on the server and a
 // customer cannot change what they pay by editing the page.
-const URL_ = process.env.CATALOG_URL || "https://raw.githubusercontent.com/axx6090-hub/Ph/main/frontend/src/staticData.json";
+const URL_ = process.env.CATALOG_URL || "https://balyiq.site/staticData.json";
 let cached = null;
 let cachedAt = 0;
 

@@ -1,7 +1,7 @@
 // GitHub is the "database" of the store: the admin panel reads and commits
 // frontend/src/staticData.json and product images, then GitHub Actions redeploys the site.
 export const REPO_OWNER = "axx6090-hub";
-export const REPO_NAME = "Ph";
+export const REPO_NAME = "Phxxxxx";
 export const REPO_BRANCH = "main";
 export const DATA_PATH = "frontend/src/staticData.json";
 export const IMAGES_DIR = "frontend/public/images/products";

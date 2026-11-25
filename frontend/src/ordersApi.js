@@ -1,5 +1,5 @@
 // Orders API (Vercel project "ph-orders-api"): saves orders and notifies the admin.
-export const ORDERS_API = (process.env.REACT_APP_ORDERS_API || "https://ph-orders-api.vercel.app").replace(/\/+$/, "");
+export const ORDERS_API = (process.env.REACT_APP_ORDERS_API || "https://api.balyiq.site").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   constructor(status, message) {

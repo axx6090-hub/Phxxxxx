@@ -2,8 +2,9 @@
 
 متجر عراقي بواجهة عربية RTL يستقبل الطلبات عبر واتساب.
 
-- 🌐 **الموقع:** https://axx6090-hub.github.io/Ph/
-- 🔐 **لوحة الأدمن:** https://axx6090-hub.github.io/Ph/#/admin
+- 🌐 **الموقع:** https://balyiq.site
+- 🔐 **لوحة الأدمن:** https://balyiq.site/#/admin
+- 📦 **سيرفر الطلبات:** https://api.balyiq.site (المجلد `ph-api/`)
 
 ## كيف يشتغل
 
