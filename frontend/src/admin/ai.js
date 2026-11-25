@@ -1,12 +1,21 @@
-// AI helpers for the admin panel. Everything runs in the admin's own browser:
+// AI helpers for the admin panel.
 //  - background removal uses an on-device model (no key, no server)
-//  - product analysis calls the Claude API with the admin's own API key
+//  - product analysis goes through the XingChi API gateway (xingchiapi.com).
+//    The key normally lives on the store's server (ph-api /api/ai); a key saved
+//    in this browser is only a fallback for testing before the server is live.
+import { apiRequest } from "../ordersApi";
+
+export const GATEWAY_URL = "https://xingchiapi.com";
+
+// Cheapest models first. All of them read images; none of them searches the web
+// through the gateway, so the price is the model's own estimate.
 export const AI_MODELS = [
-  { id: "claude-haiku-5-5", label: "Haiku 5.5 — الأسرع والأرخص" },
-  { id: "claude-sonnet-5-5", label: "Sonnet 5.5 — أدق" },
-  { id: "claude-opus-5-5", label: "Opus 5.5 — الأدق والأغلى" },
+  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite — الأرخص (مقترح)", format: "gemini" },
+  { id: "claude-haiku-5-5", label: "Claude Haiku 5.5 — رخيص وأدق بقراءة العلب", format: "anthropic" },
+  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash — أدق، أغلى شوية", format: "gemini" },
 ];
 export const DEFAULT_AI_MODEL = AI_MODELS[0].id;
+export const modelInfo = (id) => AI_MODELS.find((m) => m.id === id) || AI_MODELS[0];
 
 const loadImage = (src) =>
   new Promise((resolve, reject) => {
@@ -121,103 +130,126 @@ const SCHEMA_PROPS = (categories, skinTypes) => ({
   confident: { type: "boolean", description: "false if the text on the pack was unreadable and the answer is a guess." },
 });
 
-const callClaude = async (apiKey, body) => {
+/** Request for one gateway call (the server builds the same shape in ph-api/lib/gateway.js). */
+const gatewayRequest = (key, model, imageBase64, prompt) => {
+  if (modelInfo(model).format === "anthropic") {
+    return {
+      url: `${GATEWAY_URL}/v1/messages`,
+      headers: { "content-type": "application/json", "x-api-key": key, authorization: `Bearer ${key}`, "anthropic-version": "2023-06-01" },
+      body: {
+        model,
+        max_tokens: 2000,
+        messages: [{ role: "user", content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
+          { type: "text", text: prompt },
+        ] }],
+      },
+      read: (json) => (json.content || []).filter((b) => b.type === "text").map((b) => b.text).join(""),
+    };
+  }
+  return {
+    url: `${GATEWAY_URL}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    headers: { "content-type": "application/json", "x-goog-api-key": key, authorization: `Bearer ${key}` },
+    body: {
+      contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2000, responseMimeType: "application/json" },
+    },
+    read: (json) => (((json.candidates || [])[0] || {}).content?.parts || []).map((p) => p.text || "").join(""),
+  };
+};
+
+const gatewayError = (status) => {
+  const err = new Error(
+    status === 401 || status === 403 ? "مفتاح xingchiapi غير صحيح أو ما يشمل هذا الموديل."
+      : status === 402 ? "الرصيد بحساب xingchiapi خلص."
+      : status === 429 ? "طلبات كثيرة على xingchiapi، حاول بعد دقيقة."
+      : status === 400 || status === 404 ? "xingchiapi ما قبل هذا الموديل. جرّب موديل ثاني من الإعدادات."
+      : `خطأ من xingchiapi (${status}).`
+  );
+  err.status = status;
+  return err;
+};
+
+const callGatewayDirect = async (key, model, imageBase64, prompt) => {
+  const r = gatewayRequest(key, model, imageBase64, prompt);
   let res;
   try {
-    res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify(body),
-    });
+    res = await fetch(r.url, { method: "POST", headers: r.headers, body: JSON.stringify(r.body) });
   } catch (e) {
-    throw new Error("تعذّر الاتصال بخدمة الذكاء الاصطناعي. تأكد من الإنترنت.");
+    throw new Error("تعذّر الاتصال بـ xingchiapi من المتصفح. ينفع بعد ما ينحفظ المفتاح بالسيرفر.");
   }
-  if (!res.ok) {
-    const err = new Error(
-      res.status === 401 ? "مفتاح الذكاء الاصطناعي غير صحيح."
-        : res.status === 429 ? "تم تجاوز حد الاستخدام، حاول بعد قليل."
-        : res.status === 400 || res.status === 402 || res.status === 403 ? "طلب الذكاء الاصطناعي مرفوض — تأكد من الرصيد وصلاحية المفتاح."
-        : `خطأ من خدمة الذكاء الاصطناعي (${res.status}).`
-    );
-    err.status = res.status;
-    throw err;
+  if (!res.ok) throw gatewayError(res.status);
+  return r.read(await res.json());
+};
+
+const callServer = async (token, model, imageBase64, prompt) => {
+  const out = await apiRequest("/api/ai", { method: "POST", token, body: { model, imageBase64, prompt }, timeoutMs: 60000 });
+  return out.text || "";
+};
+
+/** Does the store's server hold the gateway key? (false while ph-api is not deployed) */
+export const serverAiAvailable = async () => {
+  try {
+    const out = await apiRequest("/api/ai", { timeoutMs: 6000 });
+    return !!out.enabled;
+  } catch (e) {
+    return false;
   }
-  return res.json();
+};
+
+/** Pulls the first JSON object out of a model answer (it may be wrapped in ``` fences or text). */
+export const extractJson = (text) => {
+  const t = String(text || "");
+  const start = t.indexOf("{");
+  const end = t.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    const v = JSON.parse(t.slice(start, end + 1));
+    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/** Keeps only the expected fields, with safe types and lengths. */
+export const cleanListing = (raw, categories, skinTypes) => {
+  const str = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max) : "");
+  const price = Math.round(Number(raw.suggested_price_iqd) || 0);
+  return {
+    name_en: str(raw.name_en, 160),
+    name_ar: str(raw.name_ar, 160),
+    description_ar: str(raw.description_ar, 1200),
+    brand: str(raw.brand, 60),
+    category: categories.some((c) => c.id === raw.category) ? raw.category : "",
+    skin_type: Array.isArray(raw.skin_type) ? raw.skin_type.filter((s) => skinTypes.some((t) => t.id === s)) : [],
+    suggested_price_iqd: price > 0 && price < 10000000 ? Math.round(price / 250) * 250 : 0,
+    price_note_ar: str(raw.price_note_ar, 200),
+    confident: raw.confident !== false,
+  };
 };
 
 /**
- * Asks Claude to read the product photo, look the product up on the web and
- * fill in the listing. Nothing is saved here: the admin reviews the form and
- * approves it. Returns { name_en, name_ar, description_ar, brand, category,
- * skin_type, suggested_price_iqd, price_note_ar, confident, searched }.
+ * Asks the model to read the product photo and fill in the listing. Nothing is
+ * saved here: the admin reviews the form and approves it. The price is the
+ * model's own estimate (no web search through the gateway).
  */
-export const analyzeProduct = async ({ apiKey, model, imageDataUrl, categories, skinTypes }) => {
-  const chosen = model || DEFAULT_AI_MODEL;
-  const categoryList = categories.map((c) => `${c.id} = ${c.name}`).join("\n");
-  const skinList = skinTypes.map((s) => `${s.id} = ${s.name}`).join("\n");
+export const analyzeProduct = async ({ serverToken, browserKey, model, imageDataUrl, categories, skinTypes }) => {
+  const chosen = modelInfo(model).id;
   const props = SCHEMA_PROPS(categories, skinTypes);
-  const prompt = (withSearch) =>
+  const fields = Object.entries(props).map(([k, v]) => `- ${k} (${v.type}${v.enum ? `: one of ${v.enum.join(", ")}` : ""}): ${v.description}`).join("\n");
+  const prompt =
     "This is a photo of a product for an Iraqi online beauty and skincare pharmacy. " +
     "Read the text printed on the packaging and identify the exact product. " +
-    (withSearch
-      ? "Use web search to confirm what the product is and to find what shops in Iraq (or nearby, converted to IQD) sell it for. "
-      : "Suggest a price in IQD only if you know what this exact product usually sells for in Iraq; otherwise give 0. ") +
+    "Suggest a price in IQD only if you know what this exact product usually sells for in Iraq; otherwise give 0. " +
     "Describe only what the pack shows or what is reliably known about this exact product. " +
-    "Answer with the JSON listing only.\n\n" +
-    `Store categories:\n${categoryList}\n\nSkin types:\n${skinList}`;
-
-  const baseBody = (withSearch) => ({
-    model: chosen,
-    max_tokens: 8000,
-    output_config: {
-      format: {
-        type: "json_schema",
-        schema: { type: "object", properties: props, required: Object.keys(props), additionalProperties: false },
-      },
-    },
-    ...(withSearch
-      ? { tools: [{ type: chosen.startsWith("claude-haiku") ? "web_search_20250305" : "web_search_20260209", name: "web_search", max_uses: 4 }] }
-      : {}),
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: dataUrlToBase64(imageDataUrl) } },
-          { type: "text", text: prompt(withSearch) },
-        ],
-      },
-    ],
-  });
-
-  const run = async (withSearch) => {
-    const body = baseBody(withSearch);
-    let json = await callClaude(apiKey, body);
-    // A long web search can pause the turn; let it carry on a couple of times.
-    for (let i = 0; i < 2 && json.stop_reason === "pause_turn"; i++) {
-      body.messages = [...body.messages, { role: "assistant", content: json.content }];
-      json = await callClaude(apiKey, body);
-    }
-    if (json.stop_reason === "refusal") throw new Error("الذكاء الاصطناعي رفض تحليل هذه الصورة.");
-    const texts = (json.content || []).filter((b) => b.type === "text").map((b) => b.text);
-    for (let i = texts.length - 1; i >= 0; i--) {
-      try {
-        const parsed = JSON.parse(texts[i]);
-        if (parsed && typeof parsed === "object") return { ...parsed, searched: withSearch };
-      } catch (e) { /* try the previous block */ }
-    }
-    throw new Error("الذكاء الاصطناعي ما رجّع بيانات المنتج. حاول بصورة أوضح.");
-  };
-
-  try {
-    return await run(true);
-  } catch (err) {
-    // Web search may be switched off for this API key; try once without it.
-    if (err.status === 400 || err.status === 403) return run(false);
-    throw err;
-  }
+    `Answer with ONE JSON object only, no other text, with exactly these fields:\n${fields}\n\n` +
+    `Store categories:\n${categories.map((c) => `${c.id} = ${c.name}`).join("\n")}\n\n` +
+    `Skin types:\n${skinTypes.map((s) => `${s.id} = ${s.name}`).join("\n")}`;
+  const imageBase64 = dataUrlToBase64(imageDataUrl);
+  const text = serverToken
+    ? await callServer(serverToken, chosen, imageBase64, prompt)
+    : await callGatewayDirect(browserKey, chosen, imageBase64, prompt);
+  const parsed = extractJson(text);
+  if (!parsed) throw new Error("الذكاء الاصطناعي ما رجّع بيانات المنتج. حاول بصورة أوضح.");
+  return { ...cleanListing(parsed, categories, skinTypes), searched: false };
 };

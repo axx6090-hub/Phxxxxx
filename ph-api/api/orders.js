@@ -56,6 +56,8 @@ const createOrder = async (req) => {
     const id = clean(it.id, 120);
     const qty = Math.max(1, Math.min(99, Math.floor(Number(it.qty) || 1)));
     const product = catalog && catalog.get(id);
+    // with the catalog loaded, an unknown product id is a forged or stale cart
+    if (catalog && !product) throw new HttpError(400, "منتج بالسلة مو موجود بالمتجر، حدّث الصفحة وجرب مرة ثانية.");
     if (!product) unverified = true;
     const price = product ? Number(product.price) || 0 : Math.max(0, Math.round(Number(it.price) || 0));
     const name = product ? product.name : clean(it.name, 200);

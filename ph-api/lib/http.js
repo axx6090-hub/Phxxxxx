@@ -44,8 +44,9 @@ export const readBody = (req) => {
   return {};
 };
 
+// x-real-ip is set by Vercel itself; x-forwarded-for can carry client-written values first.
 export const clientIp = (req) =>
-  String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  String(req.headers["x-real-ip"] || req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
 
 /** Wraps a map of method handlers with CORS, OPTIONS and error handling. */
 export const route = (handlers) => async (req, res) => {

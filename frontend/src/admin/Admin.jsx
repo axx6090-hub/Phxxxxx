@@ -2,16 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Trash2, Sparkles, X, Search } from "lucide-react";
 import { loadStoreData, publishStore, REPO_OWNER, REPO_NAME } from "./github";
-import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, makeWhiteBackground, resizeForAnalysis, dataUrlToBase64 } from "./ai";
+import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, makeWhiteBackground, resizeForAnalysis, dataUrlToBase64, serverAiAvailable } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
 
 const TOKEN_KEY = "admin_gh_token";
-const AI_KEY = "admin_ai_key";
+const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
 const AI_MODEL_KEY = "admin_ai_model";
 const TOKEN_HELP_URL = "https://github.com/settings/personal-access-tokens/new";
-const AI_HELP_URL = "https://platform.claude.com/settings/keys";
 
 const store = {
   get: (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
@@ -86,7 +85,7 @@ const Login = ({ onLogin }) => {
 // ============== PRODUCT FORM (add / edit) ==============
 const emptyForm = () => ({ name: "", name_en: "", description: "", brand: "", category: "", skin_type: [], price: "", sale_price: "", free_delivery: false });
 
-const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
+const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
   const editing = !!initial;
   const [form, setForm] = useState(() => (initial
     ? { ...emptyForm(), ...initial, price: String(initial.price ?? ""), sale_price: initial.sale_price ? String(initial.sale_price) : "" }
@@ -124,8 +123,8 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
       setStatus("تجهيز الصورة...");
       const analysisImage = await resizeForAnalysis(file);
 
-      const analysis = aiKey
-        ? analyzeProduct({ apiKey: aiKey, model: aiModel, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
+      const analysis = ai.serverAi || ai.browserKey
+        ? analyzeProduct({ serverToken: ai.serverAi ? ai.token : "", browserKey: ai.browserKey, model: ai.model, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
             .then((r) => ({ ok: true, r }))
             .catch((err) => ({ ok: false, err }))
         : Promise.resolve(null);
@@ -138,7 +137,7 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
       setStatus("قراءة اسم المنتج ووصفه...");
       const result = await analysis;
       if (result === null) {
-        newNotes.push("ما مضاف مفتاح الذكاء الاصطناعي (من تبويب الإعدادات)، فاكتب الاسم والوصف يدوياً.");
+        newNotes.push("ما مضاف مفتاح xingchiapi بعد (تبويب الإعدادات)، فاكتب الاسم والوصف يدوياً.");
       } else if (!result.ok) {
         newNotes.push(`تحليل الاسم والوصف فشل: ${result.err.message}`);
       } else {
@@ -157,11 +156,10 @@ const ProductForm = ({ data, initial, aiKey, aiModel, onSave, onCancel }) => {
           setForm((f) => (f.category ? f : { ...f, category: r.category }));
         }
         if (r.suggested_price_iqd > 0) {
-          newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — اقتراح من الذكاء الاصطناعي، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
+          newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — تقدير من الذكاء الاصطناعي بدون بحث بالإنترنت، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
         } else {
           newNotes.push(`ما لگينا سعر مضمون لهذا المنتج، فاكتب السعر بنفسك.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
         }
-        if (!r.searched) newNotes.push("البحث بالإنترنت ما اشتغل بهذا المفتاح، فالمعلومات من معرفة الذكاء الاصطناعي فقط.");
         if (r.confident === false) newNotes.push("الكتابة على العلبة ما كانت واضحة، فراجع الاسم والوصف قبل الحفظ.");
       }
     } catch (err) {
@@ -315,7 +313,18 @@ const Panel = ({ token, initial, onLogout }) => {
   const [publishing, setPublishing] = useState("");
   const [message, setMessage] = useState(null);
   const [aiKey, setAiKey] = useState(() => store.get(AI_KEY));
-  const [aiModel, setAiModel] = useState(() => store.get(AI_MODEL_KEY) || DEFAULT_AI_MODEL);
+  const [aiModel, setAiModel] = useState(() => {
+    const saved = store.get(AI_MODEL_KEY);
+    return AI_MODELS.some((m) => m.id === saved) ? saved : DEFAULT_AI_MODEL;
+  });
+  const [serverAi, setServerAi] = useState(false);
+  useEffect(() => {
+    // drop keys saved by older versions of this panel
+    store.set("admin_ai_key", "");
+    store.set("admin_gemini_key", "");
+    serverAiAvailable().then(setServerAi);
+  }, []);
+  const ai = { model: aiModel, browserKey: aiKey, serverAi, token };
   const [newCat, setNewCat] = useState({ name: "", emoji: "", home: true });
 
   useEffect(() => {
@@ -461,7 +470,7 @@ const Panel = ({ token, initial, onLogout }) => {
       )}
 
       {tab === "products" && editing && (
-        <ProductForm key={editing.id} data={data} initial={editing} aiKey={aiKey} aiModel={aiModel} onSave={(p, img) => saveEdit(editing.id, p, img)} onCancel={() => setEditingId(null)} />
+        <ProductForm key={editing.id} data={data} initial={editing} ai={ai} onSave={(p, img) => saveEdit(editing.id, p, img)} onCancel={() => setEditingId(null)} />
       )}
 
       {tab === "products" && !editing && (
@@ -496,7 +505,7 @@ const Panel = ({ token, initial, onLogout }) => {
         </div>
       )}
 
-      {tab === "add" && <ProductForm data={data} aiKey={aiKey} aiModel={aiModel} onSave={addProduct} />}
+      {tab === "add" && <ProductForm data={data} ai={ai} onSave={addProduct} />}
 
       {tab === "categories" && (
         <div className="space-y-5">
@@ -542,16 +551,20 @@ const Panel = ({ token, initial, onLogout }) => {
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-1">الذكاء الاصطناعي</h2>
             <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              شيل الخلفية يشتغل على جهازك مباشرة وما يحتاج مفتاح. قراءة الاسم والوصف من الصورة تحتاج مفتاح Claude API خاص بك
-              (<a href={AI_HELP_URL} target="_blank" rel="noopener noreferrer" className="text-pink-600 underline">من هنا</a>) وتكلفتها سنتات قليلة لكل منتج.
-              المفتاح ينحفظ بمتصفحك فقط.
+              شيل الخلفية يشتغل على جهازك مباشرة وما يحتاج مفتاح. قراءة الاسم والوصف والسعر من الصورة تمر من حسابك بـ xingchiapi.
+              {serverAi ? " المفتاح محفوظ بالسيرفر وما يوصل للمتصفح." : " بعد النشر ينحط المفتاح بالسيرفر. للتجربة هسه تگدر تلصقه هنا وينحفظ بهذا المتصفح فقط."}
             </p>
-            <label className="block text-sm font-medium text-gray-700 mb-1">مفتاح Claude API</label>
-            <input type="password" value={aiKey} onChange={(e) => { setAiKey(e.target.value.trim()); store.set(AI_KEY, e.target.value.trim()); }} placeholder="sk-ant-..." dir="ltr" autoComplete="off" className={inputCls} data-testid="admin-ai-key" />
+            {!serverAi && (
+              <>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مفتاح xingchiapi (للتجربة بهذا المتصفح)</label>
+                <input type="password" value={aiKey} onChange={(e) => { setAiKey(e.target.value.trim()); store.set(AI_KEY, e.target.value.trim()); }} placeholder="sk-..." dir="ltr" autoComplete="off" className={inputCls} data-testid="admin-ai-key" />
+              </>
+            )}
             <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">الموديل</label>
             <select value={aiModel} onChange={(e) => { setAiModel(e.target.value); store.set(AI_MODEL_KEY, e.target.value); }} className={inputCls} data-testid="admin-ai-model">
               {AI_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">السعر المقترح تقدير من الموديل نفسه بدون بحث بالإنترنت، فراجعه دائماً. صور المنتجات تمر من xingchiapi، فلا ترسل صور فيها معلومات شخصية.</p>
           </div>
           <div className="border-t border-pink-100 pt-5">
             <h2 className="text-lg font-bold text-gray-900 mb-1">الحساب</h2>
@@ -578,7 +591,7 @@ export default function Admin() {
       .finally(() => setChecking(false));
   }, []);
 
-  const logout = () => { store.set(TOKEN_KEY, ""); setSession(null); };
+  const logout = () => { store.set(TOKEN_KEY, ""); store.set(AI_KEY, ""); setSession(null); };
 
   if (checking) return <div className="py-20 text-center text-gray-500">جاري التحميل...</div>;
   if (!session) return <Login onLogin={(token, loaded) => setSession({ token, loaded })} />;
