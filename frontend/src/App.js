@@ -2,7 +2,7 @@ import React, { useEffect, useState, createContext, useContext, useMemo, Suspens
 import { HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "./localAxios";
 import staticData from "./staticData.json";
-import { ShoppingBag, Heart, Search, Menu, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook, Home as HomeIcon, LayoutGrid, BadgePercent } from "lucide-react";
+import { ShoppingBag, Heart, Search, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook, Home as HomeIcon, LayoutGrid, BadgePercent } from "lucide-react";
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
@@ -184,7 +184,6 @@ const CartProvider = ({ children }) => {
 // ============== HEADER ==============
 const Header = () => {
   const { totalQty, setIsCartOpen, wishlist } = useCart();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const navigate = useNavigate();
@@ -212,11 +211,6 @@ const Header = () => {
       <header className="sticky top-0 z-40 bg-white border-b border-pink-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
-            {/* Mobile menu */}
-            <button onClick={() => setMenuOpen(true)} className="lg:hidden text-gray-700 hover:text-pink-600" data-testid="mobile-menu-toggle">
-              <Menu size={26} />
-            </button>
-
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
               <div className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -275,22 +269,6 @@ const Header = () => {
         )}
       </header>
 
-      {/* Mobile drawer */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" onClick={() => setMenuOpen(false)}>
-          <div className="absolute top-0 right-0 h-full w-80 max-w-[85%] bg-white p-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-8">
-              <span className="text-xl font-extrabold text-[#e91e63]">{SETTINGS.storeName}</span>
-              <button onClick={() => setMenuOpen(false)} data-testid="mobile-menu-close"><X size={24} /></button>
-            </div>
-            <nav className="flex flex-col gap-1 text-base">
-              {navLinks.map((l) => (
-                <Link key={l.to} to={l.to} onClick={() => setMenuOpen(false)} className="py-3 border-b border-pink-50 hover:text-pink-600">{l.name}</Link>
-              ))}
-            </nav>
-          </div>
-        </div>
-      )}
     </>
   );
 };
