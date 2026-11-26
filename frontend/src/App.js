@@ -238,13 +238,13 @@ const Header = () => {
               <button onClick={() => setSearchOpen(true)} className="text-gray-700 hover:text-pink-600" data-testid="search-toggle">
                 <Search size={22} />
               </button>
-              <Link to="/wishlist" className="text-gray-700 hover:text-pink-600 relative" data-testid="wishlist-link">
+              <Link to="/wishlist" className="hidden lg:block text-gray-700 hover:text-pink-600 relative" data-testid="wishlist-link">
                 <Heart size={22} />
                 {wishlist.length > 0 && (
                   <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{wishlist.length}</span>
                 )}
               </Link>
-              <button onClick={() => setIsCartOpen(true)} className="text-gray-700 hover:text-pink-600 relative" data-testid="cart-toggle">
+              <button onClick={() => setIsCartOpen(true)} className="hidden lg:block text-gray-700 hover:text-pink-600 relative" data-testid="cart-toggle">
                 <ShoppingBag size={22} />
                 {totalQty > 0 && (
                   <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" data-testid="cart-count">{totalQty}</span>
