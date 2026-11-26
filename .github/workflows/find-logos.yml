@@ -1,6 +1,8 @@
 name: Find brand logos
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   find:
     runs-on: ubuntu-latest
@@ -10,7 +12,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -I .github/scripts/find_logos.py .github/scripts/brand_sites.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: logo-candidates
-          path: logo-candidates
+      # candidates go to a side branch for review; nothing on main changes
+      - run: |
+          mv logo-candidates /tmp/logo-candidates
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan logo-candidates
+          git rm -rq --cached . && git clean -fdq
+          cp -r /tmp/logo-candidates/. .
+          git add -A && git commit -qm "Logo candidates"
+          git push -f origin logo-candidates
