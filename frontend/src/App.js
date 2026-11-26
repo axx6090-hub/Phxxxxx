@@ -659,7 +659,7 @@ const Collection = () => {
   }, [slug]);
 
   const brandName = slug.startsWith("brand-")
-    ? (listBrands(staticData.products).find((b) => b.slug === slug.replace("brand-", "")) || {}).name
+    ? (listBrands(staticData.products, staticData.brands).find((b) => b.slug === slug.replace("brand-", "")) || {}).name
     : null;
   const categoryName = brandName || (slug.startsWith("category-")
     ? (staticData.categories.find((c) => c.slug === slug.replace("category-", "")) || {}).name
@@ -1329,7 +1329,7 @@ const PrivacyPage = () => (
 
 // ============== CATEGORIES PAGE ==============
 const BrandsSection = () => {
-  const brands = listBrands(staticData.products);
+  const brands = listBrands(staticData.products, staticData.brands);
   if (!brands.length) return null;
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" data-testid="brands-section">
@@ -1339,11 +1339,10 @@ const BrandsSection = () => {
           <Link key={b.slug} to={`/collection/brand-${b.slug}`} className="group text-center" data-testid={`brand-${b.slug}`}>
             <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl overflow-hidden mb-2 p-2 group-hover:shadow-lg transition">
               <div className="w-full h-full bg-white rounded-xl overflow-hidden flex items-center justify-center">
-                {b.image ? (
-                  <img src={optimized(b.image, 256)} onError={fallbackTo(b.image)} alt={b.name} loading="lazy" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
-                ) : (
-                  <span className="text-lg font-extrabold text-pink-600 px-1" dir="ltr">{b.name}</span>
-                )}
+                {b.logo ? (
+                  <img src={b.logo} alt={`شعار ${b.name}`} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = ""; }} className="max-w-full max-h-full object-contain p-2.5 group-hover:scale-105 transition-transform" data-testid={`brand-logo-${b.slug}`} />
+                ) : null}
+                <span style={b.logo ? { display: "none" } : undefined} className="text-sm sm:text-base font-extrabold text-gray-800 px-1.5 leading-tight break-words" dir="ltr">{b.name}</span>
               </div>
             </div>
             <p className="text-xs sm:text-sm font-bold text-gray-800 group-hover:text-pink-600 truncate" dir="ltr">{b.name}</p>

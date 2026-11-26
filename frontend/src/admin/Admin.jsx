@@ -7,6 +7,7 @@ import { DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageTo
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
+import { BrandLogos } from "./BrandLogos";
 import { useConfirmTap } from "./confirmTap";
 
 const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
@@ -385,6 +386,8 @@ const Panel = ({ token, initial, onLogout }) => {
   const [previews, setPreviews] = useState({}); // productId -> data URL for unpublished photos
   const [bannerImages, setBannerImages] = useState({}); // pendingId -> base64 jpeg
   const [bannerPreviews, setBannerPreviews] = useState({}); // pendingId -> data URL
+  const [brandLogos, setBrandLogos] = useState({}); // brand slug -> { base64 png, name }
+  const [brandPreviews, setBrandPreviews] = useState({}); // brand slug -> data URL
   const [dirty, setDirty] = useState(0);
   const [tab, setTab] = useState("orders");
   const ordersState = useOrders(token);
@@ -495,11 +498,13 @@ const Panel = ({ token, initial, onLogout }) => {
     setPublishing("جاري النشر...");
     setMessage(null);
     try {
-      const result = await publishStore(token, { data, loadedSha: sha, images, bannerImages, onStep: setPublishing });
+      const result = await publishStore(token, { data, loadedSha: sha, images, bannerImages, brandLogos, onStep: setPublishing });
       setData(result.data);
       setSha(result.sha);
       setImages({});
       setBannerImages({});
+      setBrandLogos({});
+      setBrandPreviews({});
       setDirty(0);
       setMessage({ ok: true, text: "تم النشر ✅ التغييرات تظهر بالموقع خلال دقيقتين تقريباً." });
     } catch (err) {
@@ -662,6 +667,24 @@ const Panel = ({ token, initial, onLogout }) => {
             ))}
           </div>
           <p className="text-xs text-gray-500">تكدر تغيّر اسم القسم والإيموجي وترتيبه (الأسهم) مباشرة من القائمة. القسم اللي بيه منتجات ما ينحذف — احذف منتجاته أو انقلها لقسم ثاني أولاً.</p>
+          <BrandLogos
+            products={data.products}
+            brands={data.brands}
+            previews={brandPreviews}
+            armed={armed}
+            askConfirm={askConfirm}
+            onPick={(slug, name, dataUrl) => {
+              setBrandLogos((m) => ({ ...m, [slug]: { base64: dataUrlToBase64(dataUrl), name } }));
+              setBrandPreviews((m) => ({ ...m, [slug]: dataUrl }));
+              setDirty((n) => n + 1);
+              setMessage(null);
+            }}
+            onRemove={(slug) => {
+              setBrandLogos((m) => { const rest = { ...m }; delete rest[slug]; return rest; });
+              setBrandPreviews((m) => { const rest = { ...m }; delete rest[slug]; return rest; });
+              change((d) => { if (Array.isArray(d.brands)) d.brands = d.brands.filter((b) => b && b.slug !== slug); return d; });
+            }}
+          />
         </div>
       )}
 

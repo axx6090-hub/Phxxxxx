@@ -6,8 +6,10 @@ export const REPO_BRANCH = "main";
 export const DATA_PATH = "frontend/src/staticData.json";
 export const IMAGES_DIR = "frontend/public/images/products";
 export const BANNERS_DIR = "frontend/public/images/banners";
+const BRANDS_DIR = "frontend/public/images/brands";
 
 import { apiRequest } from "../ordersApi";
+import { brandFileName } from "../lib/brands";
 
 // The panel never holds a GitHub token: the store server (/api/repo) reads and writes these
 // files with its own token, and only after the admin password session cookie is checked.
@@ -68,7 +70,7 @@ const putFile = async (token, path, base64Content, message, sha) => {
  * Publishes a draft: uploads new product images first, then the data file.
  * `images` is { [productId]: base64Jpeg }. Returns the new data sha.
  */
-export const publishStore = async (token, { data, loadedSha, images, bannerImages, onStep }) => {
+export const publishStore = async (token, { data, loadedSha, images, bannerImages, brandLogos, onStep }) => {
   const currentSha = await getSha(token, DATA_PATH);
   if (loadedSha && currentSha && currentSha !== loadedSha) throw new GitHubError(409, "البيانات تغيّرت على GitHub. حدّث الصفحة وأعد المحاولة.");
 
@@ -95,6 +97,18 @@ export const publishStore = async (token, { data, loadedSha, images, bannerImage
     await putFile(token, `${BANNERS_DIR}/${id}.jpg`, bannerImages[id], `Add banner image ${id}`, await getSha(token, `${BANNERS_DIR}/${id}.jpg`));
     banners.forEach((b) => { if (b && b.img === pending) b.img = `./images/banners/${id}.jpg`; });
   }
+  const logoSlugs = Object.keys(brandLogos || {});
+  for (let i = 0; i < logoSlugs.length; i++) {
+    const slug = logoSlugs[i];
+    if (onStep) onStep(`رفع شعارات الشركات (${i + 1}/${logoSlugs.length})`);
+    const path = `${BRANDS_DIR}/${brandFileName(slug)}.png`;
+    await putFile(token, path, brandLogos[slug].base64, `Add brand logo ${slug}`, await getSha(token, path));
+    if (!Array.isArray(finalData.brands)) finalData.brands = [];
+    let entry = finalData.brands.find((b) => b && b.slug === slug);
+    if (!entry) { entry = { slug, name: brandLogos[slug].name || slug }; finalData.brands.push(entry); }
+    entry.logo = `./images/brands/${brandFileName(slug)}.png?v=${Date.now().toString(36)}`;
+  }
+
   if (finalData.settings && Array.isArray(finalData.settings.banners)) {
     finalData.settings.banners = finalData.settings.banners.filter((b) => !(b && String(b.img || "").startsWith("pending:")));
   }
