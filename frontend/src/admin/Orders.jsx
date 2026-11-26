@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useConfirmTap } from "./confirmTap";
 import { Phone, MessageCircle, Trash2, RefreshCw, ChevronDown } from "lucide-react";
 import { apiRequest } from "../ordersApi";
 
@@ -127,6 +128,7 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
   const [open, setOpen] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [armed, askConfirm] = useConfirmTap();
   const st = statusOf(order.status);
 
   const setStatus = async (status) => {
@@ -142,8 +144,8 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
     }
   };
 
-  const remove = async () => {
-    if (!window.confirm(`حذف الطلب #${order.id} نهائياً؟`)) return;
+  const remove = () => askConfirm("delete", () => removeNow());
+  const removeNow = async () => {
     setBusy(true);
     try {
       await apiRequest(`/api/orders?key=${encodeURIComponent(order.key)}`, { method: "DELETE", token });
@@ -212,7 +214,7 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
                 {s.label}
               </button>
             ))}
-            <button type="button" onClick={remove} disabled={busy} className="mr-auto text-gray-400 hover:text-red-500" aria-label="حذف الطلب" data-testid={`admin-order-delete-${order.id}`}><Trash2 size={18} /></button>
+            <button type="button" onClick={remove} disabled={busy} className="mr-auto text-gray-400 hover:text-red-500" aria-label="حذف الطلب" data-testid={`admin-order-delete-${order.id}`}>{armed === "delete" ? <span className="text-xs font-bold text-red-600">حذف نهائي؟ دوس مرة ثانية</span> : <Trash2 size={18} />}</button>
           </div>
           {order.prep?.history?.length > 0 && (
             <div className="text-xs text-gray-500 space-y-0.5" data-testid={`admin-order-prep-history-${order.id}`}>

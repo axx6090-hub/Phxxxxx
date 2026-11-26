@@ -6,6 +6,7 @@ import { DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageTo
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
+import { useConfirmTap } from "./confirmTap";
 
 const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
 const AI_MODEL_KEY = "admin_ai_model";
@@ -397,6 +398,7 @@ const Panel = ({ token, initial, onLogout }) => {
   }, []);
   const ai = { model: DEFAULT_AI_MODEL, browserKey: "", serverAi, token };
   const [newCat, setNewCat] = useState({ name: "", emoji: "", home: true });
+  const [armed, askConfirm] = useConfirmTap();
 
   useEffect(() => {
     if (!dirty) return undefined;
@@ -452,11 +454,10 @@ const Panel = ({ token, initial, onLogout }) => {
     setEditingId(null);
   };
 
-  const deleteProduct = (p) => {
-    if (!window.confirm(`حذف «${p.name}»؟`)) return;
+  const deleteProduct = (p) => askConfirm(`p:${p.id}`, () => {
     change((d) => { d.products = d.products.filter((x) => x.id !== p.id); return d; });
     setImages((m) => { const rest = { ...m }; delete rest[p.id]; return rest; });
-  };
+  });
 
   const addCategory = (e) => {
     e.preventDefault();
@@ -469,8 +470,7 @@ const Panel = ({ token, initial, onLogout }) => {
 
   const deleteCategory = (c) => {
     if (counts[c.id]) return;
-    if (!window.confirm(`حذف قسم «${c.name}»؟`)) return;
-    change((d) => { d.categories = d.categories.filter((x) => x.id !== c.id); return d; });
+    askConfirm(`c:${c.id}`, () => change((d) => { d.categories = d.categories.filter((x) => x.id !== c.id); return d; }));
   };
 
   const publish = async () => {
@@ -583,7 +583,7 @@ const Panel = ({ token, initial, onLogout }) => {
                   {p.out_of_stock ? "غير متوفر" : "متوفر"}
                 </button>
                 <button onClick={() => setEditingId(p.id)} className="text-sm font-semibold text-pink-600 hover:underline shrink-0" data-testid={`admin-edit-${p.id}`}>تعديل</button>
-                <button onClick={() => deleteProduct(p)} className="text-gray-400 hover:text-red-500 shrink-0" aria-label="حذف" data-testid={`admin-delete-${p.id}`}><Trash2 size={18} /></button>
+                <button onClick={() => deleteProduct(p)} className="text-gray-400 hover:text-red-500 shrink-0" aria-label="حذف" data-testid={`admin-delete-${p.id}`}>{armed === `p:${p.id}` ? <span className="text-xs font-bold text-red-600">متأكد؟ دوس مرة ثانية</span> : <Trash2 size={18} />}</button>
               </div>
             ))}
             {visible.length === 0 && <p className="text-center text-gray-500 py-10">لا توجد منتجات.</p>}
@@ -624,7 +624,7 @@ const Panel = ({ token, initial, onLogout }) => {
                 <label className="flex items-center gap-1.5 text-xs text-gray-600 shrink-0">
                   <input type="checkbox" checked={!!c.home} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).home = e.target.checked; return d; })} /> بالرئيسية
                 </label>
-                <button onClick={() => deleteCategory(c)} disabled={!!counts[c.id]} title={counts[c.id] ? "احذف أو انقل منتجات القسم أولاً" : "حذف القسم"} className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 shrink-0" data-testid={`admin-cat-delete-${c.id}`}><Trash2 size={18} /></button>
+                <button onClick={() => deleteCategory(c)} disabled={!!counts[c.id]} title={counts[c.id] ? "احذف أو انقل منتجات القسم أولاً" : "حذف القسم"} className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 shrink-0" data-testid={`admin-cat-delete-${c.id}`}>{armed === `c:${c.id}` ? <span className="text-xs font-bold text-red-600">متأكد؟ دوس مرة ثانية</span> : <Trash2 size={18} />}</button>
               </div>
             ))}
           </div>
