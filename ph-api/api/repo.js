@@ -51,7 +51,7 @@ const readPublic = async (path, metaOnly) => {
 };
 
 /** Checks the server token against GitHub. Returns only statuses and flags, never the token. */
-export const checkToken = async () => {
+export const checkToken = async (writeTest = false) => {
   const t = rawToken();
   if (!t) return { set: false };
   const kind = t.startsWith("github_pat_") ? "fine-grained" : t.startsWith("ghp_") ? "classic" : "other";
@@ -62,6 +62,22 @@ export const checkToken = async () => {
     const body = await res.json().catch(() => ({}));
     if (res.ok) out.canWrite = !!(body.permissions && body.permissions.push);
     else out.message = String(body.message || "").slice(0, 120);
+    if (res.ok && writeTest) {
+      // harmless write: make a throwaway branch at main's commit, then delete it
+      const h = { ...headers(), "Content-Type": "application/json" };
+      const main = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/${BRANCH}`, { headers: h, cache: "no-store" });
+      const sha = main.ok ? ((await main.json()).object || {}).sha : "";
+      const ref = `token-check-${Date.now()}`;
+      const mk = await fetch(`https://api.github.com/repos/${REPO}/git/refs`, { method: "POST", headers: h, body: JSON.stringify({ ref: `refs/heads/${ref}`, sha }) });
+      out.writeStatus = mk.status;
+      if (!mk.ok) {
+        out.writeMessage = String(((await mk.json().catch(() => ({}))).message) || "").slice(0, 120);
+        out.needs = mk.headers.get("x-accepted-github-permissions") || "";
+      } else {
+        const del = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${ref}`, { method: "DELETE", headers: h });
+        out.cleanup = del.status;
+      }
+    }
   } catch (e) {
     out.status = 0;
   }
@@ -107,7 +123,11 @@ export default route({
       headers: { ...headers(), "Content-Type": "application/json" },
       body: JSON.stringify({ message, content, branch: BRANCH, ...(sha ? { sha } : {}) }),
     });
-    if (!res.ok) throw fail(res.status);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error("store token refused on write", res.status, String(err.message || "").slice(0, 120), res.headers.get("x-accepted-github-permissions") || "");
+      throw fail(res.status);
+    }
     const out = await res.json();
     return { sha: out.content && out.content.sha };
   },
