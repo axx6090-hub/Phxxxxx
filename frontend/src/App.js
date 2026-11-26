@@ -183,7 +183,6 @@ const CartProvider = ({ children }) => {
 
 // ============== HEADER ==============
 const Header = () => {
-  const { totalQty, setIsCartOpen, wishlist } = useCart();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const navigate = useNavigate();
@@ -196,8 +195,6 @@ const Header = () => {
       setSearchQ("");
     }
   };
-
-  const navLinks = SETTINGS.navLinks;
 
   return (
     <>
@@ -218,31 +215,10 @@ const Header = () => {
               </div>
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-7 text-[15px] font-medium text-gray-700">
-              {navLinks.map((l) => (
-                <Link key={l.to} to={l.to} className="hover:text-pink-600 transition" data-testid={`nav-${l.to.split('/').pop()}`}>
-                  {l.name}
-                </Link>
-              ))}
-            </nav>
-
             {/* Actions */}
             <div className="flex items-center gap-3 sm:gap-5">
               <button onClick={() => setSearchOpen(true)} className="text-gray-700 hover:text-pink-600" data-testid="search-toggle">
                 <Search size={22} />
-              </button>
-              <Link to="/wishlist" className="hidden lg:block text-gray-700 hover:text-pink-600 relative" data-testid="wishlist-link">
-                <Heart size={22} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{wishlist.length}</span>
-                )}
-              </Link>
-              <button onClick={() => setIsCartOpen(true)} className="hidden lg:block text-gray-700 hover:text-pink-600 relative" data-testid="cart-toggle">
-                <ShoppingBag size={22} />
-                {totalQty > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" data-testid="cart-count">{totalQty}</span>
-                )}
               </button>
             </div>
           </div>
@@ -1129,7 +1105,7 @@ const FloatingWhatsApp = () => (
     href={`https://wa.me/${WHATSAPP_NUMBER}`}
     target="_blank"
     rel="noopener noreferrer"
-    className="fixed bottom-28 lg:bottom-6 left-4 lg:left-6 z-30 w-14 h-14 rounded-full bg-[#25d366] hover:bg-green-600 text-white shadow-2xl flex items-center justify-center transition-transform hover:scale-110"
+    className="fixed bottom-28 left-4 lg:left-6 z-30 w-14 h-14 rounded-full bg-[#25d366] hover:bg-green-600 text-white shadow-2xl flex items-center justify-center transition-transform hover:scale-110"
     data-testid="floating-whatsapp"
   >
     <MessageCircle size={26} />
@@ -1152,7 +1128,7 @@ const BottomNav = () => {
 
   return (
     <nav
-      className="lg:hidden fixed inset-x-3 z-40 bg-white/95 backdrop-blur rounded-3xl border border-pink-100 shadow-[0_8px_30px_rgba(233,30,99,0.15)]"
+      className="fixed inset-x-3 sm:inset-x-0 sm:mx-auto sm:max-w-md z-40 bg-white/95 backdrop-blur rounded-3xl border border-pink-100 shadow-[0_8px_30px_rgba(233,30,99,0.15)]"
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
       aria-label="التنقل السريع"
       data-testid="bottom-nav"
@@ -1234,7 +1210,7 @@ function App() {
       <HashRouter>
         <div dir="rtl" className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
           <Header />
-          <main className="flex-1 pb-24 lg:pb-0">
+          <main className="flex-1 pb-28">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/collection/:slug" element={<Collection />} />
