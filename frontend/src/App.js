@@ -883,6 +883,14 @@ const Checkout = () => {
   const deliveryFee = !form.delivery || allFree ? 0 : DELIVERY_FEE;
   const addressRequired = form.delivery && !isKidsVideoOnly;
 
+  const ADDRESS_ERROR = "اكتبي العنوان حتى نوصل الطلب";
+  // the error sits next to its field, which may be scrolled off screen: bring it into view
+  const focusField = (testId) => {
+    const el = document.querySelector(`[data-testid="${testId}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (items.length === 0 || submitting) return;
@@ -894,10 +902,12 @@ const Checkout = () => {
 
     if ((!isKidsVideoOnly || form.phone.trim()) && !isIraqiPhone(form.phone)) {
       setPhoneError("اكتبي رقم هاتف عراقي صحيح من 11 رقم، مثل 07701234567");
+      focusField("checkout-phone");
       return;
     }
     if (addressRequired && !form.address.trim()) {
-      setSubmitError("اكتبي العنوان حتى نوصل الطلب");
+      setSubmitError(ADDRESS_ERROR);
+      focusField("checkout-address");
       return;
     }
     setPhoneError("");
@@ -1091,7 +1101,8 @@ const Checkout = () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">العنوان التفصيلي {addressRequired ? null : <span className="text-gray-400 font-normal">(اختياري)</span>}</label>
-            <input required={addressRequired} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="المنطقة، الشارع، أقرب نقطة دالة" autoComplete="street-address" className={fieldCls} data-testid="checkout-address" />
+            <input required={addressRequired} value={form.address} onChange={(e) => { setForm({ ...form, address: e.target.value }); if (submitError === ADDRESS_ERROR) setSubmitError(""); }} placeholder="المنطقة، الشارع، أقرب نقطة دالة" autoComplete="street-address" className={fieldCls} data-testid="checkout-address" />
+            {submitError === ADDRESS_ERROR && <p className="text-red-500 text-xs mt-1.5" data-testid="checkout-address-error">{ADDRESS_ERROR}</p>}
           </div>
 
           <div>
@@ -1108,7 +1119,7 @@ const Checkout = () => {
             <div className="flex justify-between text-lg font-extrabold pt-1.5 border-t border-pink-200"><span>المبلغ الإجمالي</span><span className="text-pink-600" data-testid="checkout-total">{formatPrice(totalPrice + deliveryFee)}</span></div>
           </div>
 
-          {submitError && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
+          {submitError && submitError !== ADDRESS_ERROR && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
           <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
