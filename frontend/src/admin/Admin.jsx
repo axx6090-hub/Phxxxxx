@@ -106,7 +106,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
     const white = await makeWhiteBackground(f, (label, ratio) => setStatus(`${label} ${Math.round(ratio * 100)}%`));
     setProcessed(white.dataUrl);
     setRemoved(white.removed);
-    if (!white.removed) newNotes.push("ما قدرنا نشيل الخلفية تلقائياً على هذا الجهاز، فحطينا الصورة الأصلية على خلفية بيضاء.");
+    if (!white.removed) newNotes.push("إزالة الخلفية ما اشتغلت على هذا الجهاز (أو طولت)، فحطينا الصورة الأصلية على خلفية بيضاء.");
   };
 
   // Puts the AI's answer into the form. `fixedPrice` is a price read from the page in IQD.
@@ -144,9 +144,10 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
     try {
       setStatus("تجهيز الصورة...");
       const analysisImage = await resizeForAnalysis(file);
+      const serverAi = ai.serverAi || (await serverAiAvailable());
 
-      const analysis = ai.serverAi || ai.browserKey
-        ? analyzeProduct({ serverToken: ai.serverAi ? ai.token : "", browserKey: ai.browserKey, model: ai.model, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
+      const analysis = serverAi || ai.browserKey
+        ? analyzeProduct({ serverToken: serverAi ? ai.token : "", browserKey: ai.browserKey, model: ai.model, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
             .then((r) => ({ ok: true, r }))
             .catch((err) => ({ ok: false, err }))
         : Promise.resolve(null);
@@ -156,7 +157,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       setStatus("قراءة اسم المنتج ووصفه...");
       const result = await analysis;
       if (result === null) {
-        newNotes.push("ما مضاف مفتاح xingchiapi بعد (تبويب الإعدادات)، فاكتب الاسم والوصف يدوياً.");
+        newNotes.push("الذكاء الاصطناعي مو شغال بالسيرفر هسه، فاكتب الاسم والوصف يدوياً.");
       } else if (!result.ok) {
         newNotes.push(`تحليل الاسم والوصف فشل: ${result.err.message}`);
       } else {
@@ -174,14 +175,18 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
   const runLink = async () => {
     const url = normalizeLink(link);
     if (!url) return setError("الرابط غير صحيح. الصق رابط صفحة المنتج كامل، مثل https://...");
-    if (!ai.serverAi && !ai.browserKey) return setError("حط مفتاح xingchiapi بتبويب الإعدادات أول، بعدين جرّب الرابط.");
     setBusy(true);
+    const serverAi = ai.serverAi || (await serverAiAvailable());
+    if (!serverAi && !ai.browserKey) {
+      setBusy(false);
+      return setError("الذكاء الاصطناعي مو شغال بالسيرفر هسه. حدّث الصفحة وجرّب مرة ثانية.");
+    }
     setError("");
     setNotes([]);
     const newNotes = [];
     try {
       setStatus("قراءة صفحة المنتج...");
-      const serverToken = ai.serverAi ? ai.token : "";
+      const serverToken = serverAi ? ai.token : "";
       const page = await readProductLink({ serverToken, url });
 
       let imgFile = null;
@@ -192,7 +197,16 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       const analysisImage = imgFile ? await resizeForAnalysis(imgFile).catch(() => "") : "";
 
       setStatus("الذكاء الاصطناعي يكتب الاسم والوصف...");
-      const r = await analyzeLink({ serverToken, browserKey: ai.browserKey, model: ai.model, url, page, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes });
+      let r;
+      try {
+        r = await analyzeLink({ serverToken, browserKey: ai.browserKey, model: ai.model, url, page, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes });
+      } catch (aiErr) {
+        if (!page || !(page.title || page.description)) throw aiErr;
+        // the AI failed: fill what the page itself says, for the admin to fix up
+        const t = (v, n) => String(v || "").trim().slice(0, n);
+        r = { name_ar: t(page.title, 160), name_en: t(page.title, 160), description_ar: t(page.description, 1200), brand: t(page.brand, 60), category: "", skin_type: [], suggested_price_iqd: 0, price_note_ar: "", confident: false, image_url: "", pageRead: true };
+        newNotes.push(`الذكاء الاصطناعي ما اشتغل (${aiErr.message})، فعبّينا الاسم والوصف من الصفحة نفسها كما هي. ترجمها وراجعها قبل الموافقة.`);
+      }
       if (!imgFile && r.image_url) imgFile = await imageToFile(r.image_url);
 
       const iqd = page && page.price > 0 && page.currency === "IQD" ? Math.round(page.price) : 0;
@@ -619,10 +633,14 @@ const Panel = ({ token, initial, onLogout }) => {
                 <input type="password" value={aiKey} onChange={(e) => { setAiKey(e.target.value.trim()); store.set(AI_KEY, e.target.value.trim()); }} placeholder="sk-..." dir="ltr" autoComplete="off" className={inputCls} data-testid="admin-ai-key" />
               </>
             )}
+            {serverAi ? (
+              <p className="text-sm text-gray-600 mt-3">السيرفر يختار الموديل اللي يقبله حسابك بـ xingchiapi تلقائياً.</p>
+            ) : (<>
             <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">الموديل</label>
             <select value={aiModel} onChange={(e) => { setAiModel(e.target.value); store.set(AI_MODEL_KEY, e.target.value); }} className={inputCls} data-testid="admin-ai-model">
               {AI_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
+            </>)}
             <p className="text-xs text-gray-500 mt-2 leading-relaxed">السعر المقترح تقدير من الموديل نفسه بدون بحث بالإنترنت، فراجعه دائماً. صور المنتجات تمر من xingchiapi، فلا ترسل صور فيها معلومات شخصية.</p>
           </div>
           <div className="border-t border-pink-100 pt-5">

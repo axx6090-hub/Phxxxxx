@@ -97,14 +97,33 @@ const onWhiteSquare = (img, bounds, size = 900, padding = 0.08, clean = true) =>
  * run and the original photo was just fitted onto white instead.
  */
 export const makeWhiteBackground = async (file, onProgress) => {
+  // The cut-out model runs on the device. On a slow phone it can hang, so stop
+  // waiting after a while and use the original photo on white instead.
+  const STALL_MS = 25000; // no progress at all for this long
+  const TOTAL_MS = 90000;
   try {
     const { removeBackground } = await import("@imgly/background-removal");
-    const cutout = await removeBackground(file, {
+    let last = Date.now();
+    const work = removeBackground(file, {
+      model: "isnet_quint8",
+      device: "cpu",
       output: { format: "image/png" },
       progress: (key, current, total) => {
-        if (onProgress && total) onProgress(key.startsWith("fetch") ? "تحميل نموذج الذكاء الاصطناعي" : "إزالة الخلفية", current / total);
+        last = Date.now();
+        if (onProgress && total) onProgress(key.startsWith("fetch") ? "تحميل نموذج إزالة الخلفية" : "إزالة الخلفية", current / total);
       },
     });
+    const started = Date.now();
+    const watchdog = new Promise((_, reject) => {
+      const t = setInterval(() => {
+        if (Date.now() - last > STALL_MS || Date.now() - started > TOTAL_MS) {
+          clearInterval(t);
+          reject(new Error("background removal took too long"));
+        }
+      }, 1000);
+      work.finally(() => clearInterval(t)).catch(() => {});
+    });
+    const cutout = await Promise.race([work, watchdog]);
     const img = await loadImage(await blobToDataUrl(cutout));
     return { dataUrl: onWhiteSquare(img, opaqueBounds(img)), removed: true };
   } catch (error) {
@@ -198,18 +217,22 @@ const callGatewayDirect = async (key, model, imageBase64, prompt, opts = {}) => 
 };
 
 const callServer = async (token, model, imageBase64, prompt) => {
-  const out = await apiRequest("/api/ai", { method: "POST", token, body: { model, ...(imageBase64 ? { imageBase64 } : {}), prompt }, timeoutMs: 60000 });
+  // the server picks the model itself; `model` is not sent
+  const out = await apiRequest("/api/ai", { method: "POST", token, body: { ...(imageBase64 ? { imageBase64 } : {}), prompt }, timeoutMs: 65000 });
   return out.text || "";
 };
 
 /** Does the store's server hold the gateway key? (false while ph-api is not deployed) */
 export const serverAiAvailable = async () => {
-  try {
-    const out = await apiRequest("/api/ai", { timeoutMs: 6000 });
-    return !!out.enabled;
-  } catch (e) {
-    return false;
+  for (let i = 0; i < 2; i++) {
+    try {
+      const out = await apiRequest("/api/ai", { timeoutMs: 8000 });
+      return !!out.enabled;
+    } catch (e) {
+      /* try once more */
+    }
   }
+  return false;
 };
 
 /** Pulls the first JSON object out of a model answer (it may be wrapped in ``` fences or text). */
