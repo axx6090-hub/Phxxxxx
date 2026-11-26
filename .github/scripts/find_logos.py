@@ -3,7 +3,7 @@
 Writes candidates to logo-candidates/<slug>/NN.<ext> plus index.json so a person can
 pick the right one. Nothing here changes the store.
 """
-import json, os, re, sys, urllib.parse, urllib.request
+import json, os, re, sys, time, urllib.parse, urllib.request
 from html.parser import HTMLParser
 
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
@@ -12,8 +12,14 @@ OUT = "logo-candidates"
 BRANDS = json.load(open(sys.argv[1]))  # [{slug, name, sites:[...], commons:"search words"}]
 
 
+BOT_UA = "BrandLogoFinder/1.0 (GitHub Actions; one-off logo lookup)"
+
+
 def get(url, limit=4_000_000):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*", "Accept-Language": "en"})
+    wiki = "wikimedia.org" in url or "wikipedia.org" in url
+    if wiki:
+        time.sleep(3)  # be gentle with Wikimedia
+    req = urllib.request.Request(url, headers={"User-Agent": BOT_UA if wiki else UA, "Accept": "*/*", "Accept-Language": "en"})
     with urllib.request.urlopen(req, timeout=25) as r:
         return r.geturl(), r.headers.get("Content-Type", ""), r.read(limit)
 

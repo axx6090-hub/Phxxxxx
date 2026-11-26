@@ -1,6 +1,10 @@
 name: Find brand logos
 on:
   workflow_dispatch:
+    inputs:
+      list:
+        description: brand list file in .github/scripts
+        default: brand_sites.json
 permissions:
   contents: write
 jobs:
@@ -11,14 +15,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -I .github/scripts/find_logos.py .github/scripts/brand_sites.json
+      - run: python -I .github/scripts/find_logos.py ".github/scripts/${{ inputs.list || 'brand_sites.json' }}"
       # candidates go to a side branch for review; nothing on main changes
       - run: |
           mv logo-candidates /tmp/logo-candidates
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan logo-candidates
+          git checkout --orphan logo-candidates-tmp
           git rm -rq --cached . && git clean -fdq
           cp -r /tmp/logo-candidates/. .
           git add -A && git commit -qm "Logo candidates"
-          git push -f origin logo-candidates
+          git push -f origin "HEAD:refs/heads/logo-candidates-${{ github.run_number }}"

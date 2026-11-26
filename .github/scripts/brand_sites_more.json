@@ -1,0 +1,92 @@
+[
+ {
+  "slug": "vaseline",
+  "name": "Vaseline",
+  "sites": [
+   "https://www.vaseline.co.uk",
+   "https://www.vaseline.com/in/en/home.html"
+  ],
+  "commons": "Vaseline logo"
+ },
+ {
+  "slug": "la-roche-posay",
+  "name": "La Roche-Posay",
+  "sites": [
+   "https://www.laroche-posay.co.uk",
+   "https://www.laroche-posay.com"
+  ],
+  "commons": "La Roche-Posay logo"
+ },
+ {
+  "slug": "avene",
+  "name": "Avène",
+  "sites": [
+   "https://www.avene.co.uk",
+   "https://www.aveneusa.com"
+  ],
+  "commons": "Avène logo"
+ },
+ {
+  "slug": "dr-althea",
+  "name": "Dr.Althea",
+  "sites": [
+   "https://www.dralthea.com",
+   "https://dralthea.co.kr"
+  ],
+  "commons": "Dr.Althea logo"
+ },
+ {
+  "slug": "dr-melaxin",
+  "name": "Dr.Melaxin",
+  "sites": [
+   "https://drmelaxin.com/en",
+   "https://drmelaxin.co.kr"
+  ],
+  "commons": "Dr.Melaxin logo"
+ },
+ {
+  "slug": "eqqualberry",
+  "name": "EqqualBerry",
+  "sites": [
+   "https://eqqualberry.com/index.html",
+   "https://eqqualberry.us"
+  ],
+  "commons": "EqqualBerry logo"
+ },
+ {
+  "slug": "mavala",
+  "name": "Mavala",
+  "sites": [
+   "https://www.mavala.fr",
+   "https://www.mavala.co.uk"
+  ],
+  "commons": "Mavala logo"
+ },
+ {
+  "slug": "revuele",
+  "name": "Revuele",
+  "sites": [
+   "https://revuele.com",
+   "https://revuele.co.uk"
+  ],
+  "commons": "Revuele logo"
+ },
+ {
+  "slug": "acm",
+  "name": "ACM",
+  "sites": [
+   "https://www.laboratoire-acm.com",
+   "https://www.laboratoire-acm.fr"
+  ],
+  "commons": "Laboratoire ACM logo"
+ },
+ {
+  "slug": "qv",
+  "name": "QV",
+  "sites": [
+   "https://www.qvskincare.com/qv-uk.html",
+   "https://www.egopharm.com/global.html"
+  ],
+  "commons": "Ego Pharmaceuticals QV logo"
+ }
+]
