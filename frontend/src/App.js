@@ -1104,6 +1104,9 @@ const Footer = () => (
       >
         <MessageCircle size={18} /> تواصلي عبر واتساب
       </a>
+      <div className="mt-6">
+        <Link to="/privacy-policy" className="text-sm text-pink-200 hover:text-white underline underline-offset-4" data-testid="footer-privacy">سياسة الخصوصية</Link>
+      </div>
       <div className="border-t border-pink-800/50 mt-8 pt-6 text-sm text-pink-300/70">
         © {new Date().getFullYear()} {SETTINGS.storeName} - جميع الحقوق محفوظة
       </div>
@@ -1161,6 +1164,93 @@ const BottomNav = () => {
   );
 };
 
+// ============== PRIVACY POLICY ==============
+const PrivacySection = ({ title, children }) => (
+  <section className="mb-7">
+    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{title}</h2>
+    <div className="text-gray-700 leading-loose space-y-2">{children}</div>
+  </section>
+);
+
+const PrivacyPage = () => (
+  <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" data-testid="privacy-page">
+    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#e91e63] mb-3">سياسة الخصوصية</h1>
+    <p className="text-gray-700 leading-loose mb-8">
+      أهلاً بيج في {SETTINGS.storeName}. خصوصيتج تهمنا، وهاي الصفحة توضح بكل بساطة شنو المعلومات اللي نحتاجها منج، وليش نحتاجها، وشلون نحافظ عليها.
+    </p>
+
+    <PrivacySection title="١. المعلومات اللي نطلبها منج">
+      <p>ما نطلب منج تسوين حساب بالموقع. عند إرسال الطلب نطلب بس اللي نحتاجه حتى نوصلج طلبج:</p>
+      <ul className="list-disc pr-6 space-y-1">
+        <li>رقم الهاتف</li>
+        <li>عنوان التوصيل</li>
+        <li>أي ملاحظات تكتبيها على الطلب</li>
+        <li>المنتجات اللي اخترتيها وكمياتها</li>
+      </ul>
+      <p>الدفع يكون نقداً عند الاستلام، لذلك ما نطلب ولا نحفظ أي بيانات بطاقة أو حساب مصرفي.</p>
+    </PrivacySection>
+
+    <PrivacySection title="٢. شلون نستخدم معلوماتج">
+      <ul className="list-disc pr-6 space-y-1">
+        <li>تجهيز طلبج وتوصيله لعنوانج</li>
+        <li>التواصل وياج بخصوص الطلب، مثل التأكيد أو موعد التوصيل</li>
+        <li>الرد على أسئلتج واستفساراتج</li>
+        <li>تحسين الموقع وتجربة التسوق</li>
+      </ul>
+    </PrivacySection>
+
+    <PrivacySection title="٣. الطلب عبر واتساب">
+      <p>
+        بعد ما تأكدين الطلب، ينحفظ عدنا بالموقع وينفتح واتساب ويا رسالة فيها تفاصيل الطلب حتى ترسلينها إلنا. الرسائل اللي تتبادلينها ويانا على واتساب تخضع أيضاً لسياسة خصوصية واتساب نفسه.
+      </p>
+    </PrivacySection>
+
+    <PrivacySection title="٤. مشاركة المعلومات">
+      <p>ما نبيع معلوماتج ولا نأجرها لأي جهة. نشاركها بس بالحالات هاي:</p>
+      <ul className="list-disc pr-6 space-y-1">
+        <li>ويا مندوب أو شركة التوصيل، بالقدر اللازم حتى يوصلج الطلب</li>
+        <li>إذا طلبها القانون أو جهة رسمية مختصة</li>
+        <li>إذا وافقتي إنتِ على مشاركتها</li>
+      </ul>
+    </PrivacySection>
+
+    <PrivacySection title="٥. ملفات تعريف الارتباط (الكوكيز) والحفظ بجهازج">
+      <p>
+        إذا وافقتي على الكوكيز، يحفظ الموقع بجهازج سلتج وبيانات التوصيل والمنتجات اللي شفتيها، حتى تلقينها جاهزة بزيارتج الجاية. وبعد موافقتج نشغّل أدوات إحصاء تساعدنا نفهم شلون ينستخدم الموقع حتى نحسّنه.
+      </p>
+      <p>
+        قائمة المفضلة تنحفظ بجهازج فقط. تگدرين تمسحين هاي البيانات بأي وقت من إعدادات المتصفح.
+      </p>
+    </PrivacySection>
+
+    <PrivacySection title="٦. حماية المعلومات">
+      <p>
+        نحتفظ بمعلومات الطلبات بس للمدة اللي نحتاجها لخدمتج، ونستخدم إجراءات معقولة حتى نحميها من الوصول غير المسموح. ومع ذلك، ما في نقل بيانات عبر الإنترنت آمن بنسبة ١٠٠٪.
+      </p>
+    </PrivacySection>
+
+    <PrivacySection title="٧. حقوقج">
+      <p>تگدرين تطلبين منا بأي وقت نعرض لج معلوماتج اللي عدنا، أو نصححها، أو نحذفها.</p>
+    </PrivacySection>
+
+    <PrivacySection title="٨. التعديلات على هاي السياسة">
+      <p>ممكن نحدّث هاي السياسة من وقت لوقت، وأي تغيير يظهر هنا بهاي الصفحة.</p>
+    </PrivacySection>
+
+    <PrivacySection title="٩. تواصلي ويانا">
+      <p>إذا عندج أي سؤال عن خصوصيتج، راسلينا على واتساب:</p>
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-[#25d366] hover:bg-green-600 text-white px-6 py-3 rounded-full font-semibold transition mt-2"
+      >
+        <MessageCircle size={18} /> تواصلي عبر واتساب
+      </a>
+    </PrivacySection>
+  </div>
+);
+
 // ============== CATEGORIES PAGE ==============
 const CategoriesPage = () => (
   <div className="pb-4">
@@ -1194,7 +1284,7 @@ const CookieConsent = () => {
       <div className="max-w-3xl mx-auto bg-white border border-pink-100 shadow-2xl rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
         <div className="flex-1 text-sm text-gray-700 leading-relaxed">
           <p className="font-bold text-gray-900 mb-1">🍪 نستخدم ملفات تعريف الارتباط (الكوكيز)</p>
-          <p>حتى نحفظ سلتج وبيانات التوصيل للطلب الجاي ونعرض لج المنتجات اللي شفتيها، ونحسّن تجربتج بالموقع.</p>
+          <p>حتى نحفظ سلتج وبيانات التوصيل للطلب الجاي ونعرض لج المنتجات اللي شفتيها، ونحسّن تجربتج بالموقع. <Link to="/privacy-policy" className="text-pink-600 underline underline-offset-2">سياسة الخصوصية</Link></p>
         </div>
         <button onClick={accept} className="shrink-0 w-full sm:w-auto bg-pink-600 hover:bg-pink-700 text-white font-bold px-8 py-2.5 rounded-full transition" data-testid="cookie-accept">موافق</button>
       </div>
@@ -1216,6 +1306,7 @@ function App() {
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<AdminBoundary><Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense></AdminBoundary>} />
