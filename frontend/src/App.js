@@ -661,11 +661,11 @@ const Collection = () => {
   const brandName = slug.startsWith("brand-")
     ? (listBrands(staticData.products).find((b) => b.slug === slug.replace("brand-", "")) || {}).name
     : null;
-  const categoryName = brandName || slug.startsWith("category-")
+  const categoryName = brandName || (slug.startsWith("category-")
     ? (staticData.categories.find((c) => c.slug === slug.replace("category-", "")) || {}).name
     : slug.startsWith("skin-")
       ? (staticData.skinTypes.find((t) => t.id === slug.replace("skin-", "")) || {}).name
-      : null;
+      : null);
   const title = titles[slug] || categoryName || "المنتجات";
 
   return (
