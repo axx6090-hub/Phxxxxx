@@ -28,7 +28,39 @@
         -->
         <title>صيدلية أيمن | متجر العناية بالبشرة والعطور</title>
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-    </head>
+        <script>
+      // Keep visitors on the newest version: GitHub Pages lets browsers cache
+      // index.html for a few minutes, so check for a newer build and reload once.
+      (function () {
+        function currentBundle() {
+          var list = document.getElementsByTagName("script");
+          for (var i = 0; i < list.length; i++) {
+            var m = (list[i].src || "").match(/static\/js\/main\.[^/?#]+\.js/);
+            if (m) return m[0];
+          }
+          return null;
+        }
+        function check() {
+          var cur = currentBundle();
+          if (!cur || !window.fetch) return;
+          fetch(location.pathname + "?v=" + Date.now(), { cache: "reload" })
+            .then(function (r) { return r.text(); })
+            .then(function (t) {
+              var m = t.match(/static\/js\/main\.[^"'/?#]+\.js/);
+              if (!m || m[0] === cur) return;
+              var key = "bp_reloaded_" + m[0];
+              try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch (e) { return; }
+              location.reload();
+            })
+            .catch(function () {});
+        }
+        window.addEventListener("load", check);
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") check();
+        });
+      })();
+    </script>
+</head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
