@@ -2,6 +2,7 @@ import React, { useEffect, useState, createContext, useContext, useMemo, Suspens
 import { HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "./localAxios";
 import staticData from "./staticData.json";
+import { brandSlug, listBrands } from "./lib/brands";
 import { ShoppingBag, Heart, Search, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook, Home as HomeIcon, LayoutGrid, BadgePercent } from "lucide-react";
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
@@ -645,7 +646,9 @@ const Collection = () => {
   useEffect(() => {
     setLoading(true);
     let url;
-    if (slug.startsWith("skin-")) {
+    if (slug.startsWith("brand-")) {
+      url = `${API}/products?brand=${encodeURIComponent(slug.replace("brand-", ""))}&limit=200`;
+    } else if (slug.startsWith("skin-")) {
       url = `${API}/products?skin_type=${slug.replace("skin-", "")}&limit=100`;
     } else if (slug.startsWith("category-")) {
       url = `${API}/products?category=${slug.replace("category-", "")}&limit=100`;
@@ -655,7 +658,10 @@ const Collection = () => {
     axios.get(url).then((r) => { setProducts(r.data); setLoading(false); }).catch(() => setLoading(false));
   }, [slug]);
 
-  const categoryName = slug.startsWith("category-")
+  const brandName = slug.startsWith("brand-")
+    ? (listBrands(staticData.products).find((b) => b.slug === slug.replace("brand-", "")) || {}).name
+    : null;
+  const categoryName = brandName || slug.startsWith("category-")
     ? (staticData.categories.find((c) => c.slug === slug.replace("category-", "")) || {}).name
     : slug.startsWith("skin-")
       ? (staticData.skinTypes.find((t) => t.id === slug.replace("skin-", "")) || {}).name
@@ -751,7 +757,7 @@ const ProductDetail = () => {
         <div className="flex flex-col">
           {product.badge && <span className="self-start bg-[#e91e63] text-white text-xs font-bold px-3 py-1 rounded-full mb-4">{product.badge}</span>}
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3" data-testid="product-detail-name">{product.name}</h1>
-          {product.brand && <p className="text-pink-600 font-semibold mb-4">العلامة التجارية: {product.brand}</p>}
+          {product.brand && <p className="text-pink-600 font-semibold mb-4">العلامة التجارية: <Link to={`/collection/brand-${brandSlug(product.brand)}`} className="underline underline-offset-4 hover:text-pink-700" data-testid="product-brand-link">{product.brand}</Link></p>}
 
           <div className="flex items-baseline gap-3 mb-3">
             <span className="text-3xl font-extrabold text-pink-600">{isFreeNoWhatsApp ? "مجاني" : formatPrice(product.price)}</span>
@@ -1322,9 +1328,37 @@ const PrivacyPage = () => (
 );
 
 // ============== CATEGORIES PAGE ==============
+const BrandsSection = () => {
+  const brands = listBrands(staticData.products);
+  if (!brands.length) return null;
+  return (
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" data-testid="brands-section">
+      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-6">حسب الشركة</h2>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+        {brands.map((b) => (
+          <Link key={b.slug} to={`/collection/brand-${b.slug}`} className="group text-center" data-testid={`brand-${b.slug}`}>
+            <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl overflow-hidden mb-2 p-2 group-hover:shadow-lg transition">
+              <div className="w-full h-full bg-white rounded-xl overflow-hidden flex items-center justify-center">
+                {b.image ? (
+                  <img src={optimized(b.image, 256)} onError={fallbackTo(b.image)} alt={b.name} loading="lazy" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
+                ) : (
+                  <span className="text-lg font-extrabold text-pink-600 px-1" dir="ltr">{b.name}</span>
+                )}
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-gray-800 group-hover:text-pink-600 truncate" dir="ltr">{b.name}</p>
+            <p className="text-[11px] text-gray-400">{b.count} منتج</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const CategoriesPage = () => (
   <div className="pb-4">
     <CategoriesSection />
+    <BrandsSection />
   </div>
 );
 

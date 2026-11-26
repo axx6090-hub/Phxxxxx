@@ -1,4 +1,5 @@
 import data from "./staticData.json";
+import { brandSlug } from "./lib/brands";
 
 const normalize = (value) => String(value || "").trim().toLowerCase();
 
@@ -7,7 +8,9 @@ const filterProducts = (params = {}) => {
   const category = normalize(params.category);
   const skinType = normalize(params.skin_type);
   const search = normalize(params.search);
+  const brand = params.brand ? brandSlug(params.brand) : "";
   if (category) result = result.filter((product) => normalize(product.category) === category);
+  if (brand) result = result.filter((product) => brandSlug(product.brand) === brand);
   if (skinType) result = result.filter((product) => (product.skin_type || []).map(normalize).includes(skinType));
   if (search) {
     result = result.filter((product) => [product.name, product.name_en, product.description, product.brand]

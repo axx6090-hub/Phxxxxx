@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { brandSlug } from "../lib/brands";
 import { Plus, Trash2, Sparkles, X, Search, Link2 } from "lucide-react";
 import { loadStoreData, publishStore } from "./github";
 import { apiRequest } from "../ordersApi";
@@ -118,7 +119,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       name: r.name_ar || f.name,
       name_en: r.name_en || f.name_en,
       description: r.description_ar || f.description,
-      brand: r.brand || f.brand,
+      brand: r.brand ? (data.products.map((p) => String(p.brand || "").trim()).find((b) => b && brandSlug(b) === brandSlug(r.brand)) || r.brand) : f.brand,
       skin_type: Array.isArray(r.skin_type) ? r.skin_type.filter((s) => data.skinTypes.some((t) => t.id === s)) : f.skin_type,
       ...(price > 0 && !f.price ? { price: String(price) } : {}),
     }));
@@ -337,7 +338,11 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">الماركة</label>
-            <input value={form.brand} onChange={(e) => set({ brand: e.target.value })} dir="ltr" className={inputCls} data-testid="admin-brand" />
+            <input value={form.brand} onChange={(e) => set({ brand: e.target.value })} list="admin-brand-list" dir="ltr" className={inputCls} data-testid="admin-brand" />
+            <datalist id="admin-brand-list">
+              {[...new Set(data.products.map((p) => String(p.brand || "").trim()).filter(Boolean))].sort().map((b) => <option key={b} value={b} />)}
+            </datalist>
+            <p className="text-xs text-gray-400 mt-1">تظهر بصفحة الفئات تحت «حسب الشركة». اختار اسم موجود حتى ينضم لنفس الشركة.</p>
           </div>
           <div>
             <span className="block text-sm font-medium text-gray-700 mb-1.5">أنواع البشرة</span>
