@@ -1,10 +1,11 @@
 // POST   /api/orders            — customer places an order (public)
 // GET    /api/orders[?since=ms] — admin lists orders (newest first)
+// GET    /api/orders?number=12  — admin finds one order by its number (or an old code like K7Q3-9F2A)
 // PATCH  /api/orders            — admin changes an order's status { key, status }
 // DELETE /api/orders?key=...    — admin deletes an order
 import { randomBytes } from "node:crypto";
 import { route, readBody, HttpError, clientIp } from "../lib/http.js";
-import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob } from "../lib/store.js";
+import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob, claimOrderNumber, orderKeyForNumber } from "../lib/store.js";
 import { requireAdmin } from "../lib/auth.js";
 import { loadCatalog, deliveryFee as settingsDeliveryFee } from "../lib/catalog.js";
 import { notifyNewOrder } from "../lib/notify.js";
@@ -87,7 +88,14 @@ const createOrder = async (req) => {
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);
   const deliveryFee = !customer.delivery || items.every((i) => i.free_delivery) ? 0 : settingsDeliveryFee(DELIVERY_FEE);
   const createdAt = Date.now();
-  const id = newOrderId();
+  // numbers go 1, 2, 3, ...; if the counter can't be reached the order still goes through with a code
+  let id;
+  try {
+    id = String(await claimOrderNumber((n) => ({ key: orderKey(createdAt, String(n)), createdAt: new Date(createdAt).toISOString() })));
+  } catch (e) {
+    console.error("order number failed", e);
+    id = newOrderId();
+  }
   const order = {
     id,
     key: orderKey(createdAt, id),
@@ -120,8 +128,23 @@ const createOrder = async (req) => {
   return { ok: true, id: order.id, items: order.items, subtotal, deliveryFee, total: order.total };
 };
 
+const findOrder = async (raw) => {
+  const q = String(raw).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/^#/, "").trim().toUpperCase();
+  if (!q || q.length > 20) return [];
+  let key = null;
+  if (/^\d+$/.test(q)) key = await orderKeyForNumber(Number(q));
+  if (!key && /^[A-Z0-9-]+$/.test(q)) {
+    // older orders have codes like K7Q3-9F2A and no number record
+    const keys = await listOrderKeys(5000);
+    key = keys.find((k) => k.endsWith(`-${q}.json`)) || null;
+  }
+  const order = key ? await readJson(key).catch(() => null) : null;
+  return order ? [order] : [];
+};
+
 const listOrders = async (req) => {
   await requireAdmin(req);
+  if (req.query?.number) return { orders: await findOrder(req.query.number), serverTime: Date.now() };
   const since = Number(req.query?.since) || 0;
   const limit = Math.min(200, Number(req.query?.limit) || 100);
   const keys = await listOrderKeys(limit);

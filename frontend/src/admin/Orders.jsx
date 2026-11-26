@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useConfirmTap } from "./confirmTap";
-import { Phone, MessageCircle, Trash2, RefreshCw, ChevronDown } from "lucide-react";
+import { Phone, MessageCircle, Trash2, RefreshCw, ChevronDown, Search, X } from "lucide-react";
 import { apiRequest } from "../ordersApi";
 
 export const ORDER_STATUSES = [
@@ -235,6 +235,10 @@ export const OrdersTab = ({ token, state }) => {
   const { orders, setOrders, loading, error, refresh, seen, markSeen } = state;
   const [filter, setFilter] = useState("open");
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState("");
+  const [found, setFound] = useState(null); // result of a server lookup for an order not in the list
+  const [searching, setSearching] = useState(false);
+  const [searchErr, setSearchErr] = useState("");
   const newIds = useRef(new Set());
 
   // remember which orders were unseen when the tab opened, then mark them as seen
@@ -252,8 +256,27 @@ export const OrdersTab = ({ token, state }) => {
     setRefreshing(false);
   };
 
+  // order numbers: "12", "#12", "١٢" and old codes like K7Q3-9F2A
+  const q = String(query).replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/^#/, "").trim().toUpperCase();
+  const local = !q ? [] : orders.filter((o) => (/^\d+$/.test(q) ? String(o.id) === q : String(o.id).toUpperCase().includes(q)));
+  const searchServer = async (e) => {
+    e.preventDefault();
+    if (!q || local.length) return;
+    setSearching(true);
+    setSearchErr("");
+    try {
+      const res = await apiRequest(`/api/orders?number=${encodeURIComponent(q)}`, { token });
+      setFound({ q, orders: res.orders || [] });
+    } catch (err) {
+      setSearchErr(err.message);
+    } finally {
+      setSearching(false);
+    }
+  };
+  const searchResults = local.length ? local : found && found.q === q ? found.orders : [];
+
   const counts = orders.reduce((m, o) => ({ ...m, [o.status]: (m[o.status] || 0) + 1 }), {});
-  const visible = orders.filter((o) => (filter === "all" ? true : filter === "open" ? ["new", "confirmed", "shipped"].includes(o.status) : o.status === filter));
+  const visible = q ? searchResults : orders.filter((o) => (filter === "all" ? true : filter === "open" ? ["new", "confirmed", "shipped"].includes(o.status) : o.status === filter));
   const today = new Date().toDateString();
   const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === today && o.status !== "cancelled");
   const todayTotal = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
@@ -275,17 +298,33 @@ export const OrdersTab = ({ token, state }) => {
         <button type="button" onClick={doRefresh} className="mr-auto shrink-0 text-gray-500 hover:text-gray-900" aria-label="تحديث" data-testid="admin-orders-refresh"><RefreshCw size={18} className={refreshing ? "animate-spin" : ""} /></button>
       </div>
 
+      <form onSubmit={searchServer} className="flex items-center gap-2 mb-3" data-testid="admin-orders-search">
+        <div className="flex-1 flex items-center gap-2 bg-white border-2 border-pink-100 focus-within:border-pink-400 rounded-2xl px-3">
+          <Search size={16} className="text-gray-400 shrink-0" />
+          <input value={query} onChange={(e) => { setQuery(e.target.value); setSearchErr(""); }} placeholder="ابحث برقم الطلب، مثل 12" inputMode="search" dir="auto" className="flex-1 min-w-0 outline-none py-2.5 text-sm" data-testid="admin-orders-search-input" />
+          {query && <button type="button" onClick={() => { setQuery(""); setFound(null); }} className="text-gray-400 hover:text-gray-700" aria-label="مسح البحث"><X size={16} /></button>}
+        </div>
+        <button type="submit" disabled={!q || searching} className="shrink-0 bg-gray-900 text-white text-sm font-bold rounded-2xl px-4 py-2.5 disabled:opacity-50" data-testid="admin-orders-search-btn">{searching ? "..." : "بحث"}</button>
+      </form>
+      {searchErr && <p className="text-red-600 text-sm mb-3">{searchErr}</p>}
+
       {error && <p className="text-red-600 text-sm mb-3" data-testid="admin-orders-error">{error}</p>}
       {loading ? (
         <p className="text-center text-gray-500 py-10">جاري تحميل الطلبات...</p>
       ) : visible.length === 0 ? (
-        <p className="text-center text-gray-500 py-10">{orders.length ? "لا توجد طلبات بهذه الحالة." : "ما في طلبات بعد. أول ما يطلب زبون راح يظهر هنا ويوصلك إشعار."}</p>
+        <p className="text-center text-gray-500 py-10">{q ? (found && found.q === q ? `ما لگيت طلب برقم ${q}.` : "دوس «بحث» حتى أدور على هذا الرقم.") : orders.length ? "لا توجد طلبات بهذه الحالة." : "ما في طلبات بعد. أول ما يطلب زبون راح يظهر هنا ويوصلك إشعار."}</p>
       ) : (
         <div className="space-y-2">
           {visible.map((o) => (
             <OrderCard key={o.key} order={o} token={token} isNew={newIds.current.has(o.id) && o.status === "new"}
-              onChange={(updated) => setOrders((list) => list.map((x) => (x.key === updated.key ? updated : x)))}
-              onDelete={(gone) => setOrders((list) => list.filter((x) => x.key !== gone.key))} />
+              onChange={(updated) => {
+                setOrders((list) => list.map((x) => (x.key === updated.key ? updated : x)));
+                setFound((f) => (f ? { ...f, orders: f.orders.map((x) => (x.key === updated.key ? updated : x)) } : f));
+              }}
+              onDelete={(gone) => {
+                setOrders((list) => list.filter((x) => x.key !== gone.key));
+                setFound((f) => (f ? { ...f, orders: f.orders.filter((x) => x.key !== gone.key) } : f));
+              }} />
           ))}
         </div>
       )}
