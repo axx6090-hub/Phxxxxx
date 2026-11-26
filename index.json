@@ -1,0 +1,1220 @@
+{
+ "vaseline": {
+  "name": "Vaseline",
+  "sites": [
+   {
+    "site": "https://www.vaseline.com/us/en/home.html",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   },
+   {
+    "site": "https://www.vaseline.com",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   }
+  ],
+  "files": [],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "skin1004": {
+  "name": "SKIN1004",
+  "sites": [
+   {
+    "site": "https://skin1004.com",
+    "final": "https://www.skin1004.com/",
+    "ok": true
+   },
+   {
+    "site": "https://www.skin1004.com",
+    "final": "https://www.skin1004.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/SKIN1004_LOGO_300PX_30c77c72-0035-4b50-ba2c-f2c7a36a0d9d.png?v=1738771518&width=600",
+    "src": "site:https://www.skin1004.com/",
+    "score": 15,
+    "bytes": 3269
+   },
+   {
+    "file": "02.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/SKIN1004_LOGO_300PX_30c77c72-0035-4b50-ba2c-f2c7a36a0d9d.png?v=1738771518\\u0026width=500",
+    "src": "site:https://www.skin1004.com/",
+    "score": 8,
+    "bytes": 3269
+   },
+   {
+    "file": "03.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/logo_3ce60e3c-e671-45a3-b6b2-1c7f4cd826e5.png?v=1738772075",
+    "src": "site:https://www.skin1004.com/",
+    "score": 3,
+    "bytes": 3392
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/KakaoTalk_Photo_2025-05-13-17-03-08.png?crop=center&height=32&v=1747130104&width=32",
+    "src": "site:https://www.skin1004.com/",
+    "score": 1,
+    "bytes": 2430
+   },
+   {
+    "file": "05.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/SKIN1004_LOGO_300PX_30c77c72-0035-4b50-ba2c-f2c7a36a0d9d.png?v=1738771518&width=600",
+    "src": "site:https://www.skin1004.com",
+    "score": 15,
+    "bytes": 3269
+   },
+   {
+    "file": "06.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/SKIN1004_LOGO_300PX_30c77c72-0035-4b50-ba2c-f2c7a36a0d9d.png?v=1738771518\\u0026width=500",
+    "src": "site:https://www.skin1004.com",
+    "score": 8,
+    "bytes": 3269
+   },
+   {
+    "file": "07.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/logo_3ce60e3c-e671-45a3-b6b2-1c7f4cd826e5.png?v=1738772075",
+    "src": "site:https://www.skin1004.com",
+    "score": 3,
+    "bytes": 3392
+   },
+   {
+    "file": "08.png",
+    "url": "https://www.skin1004.com/cdn/shop/files/KakaoTalk_Photo_2025-05-13-17-03-08.png?crop=center&height=32&v=1747130104&width=32",
+    "src": "site:https://www.skin1004.com",
+    "score": 1,
+    "bytes": 2430
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "medicube": {
+  "name": "Medicube",
+  "sites": [
+   {
+    "site": "https://medicube.us",
+    "final": "https://medicube.us",
+    "ok": true
+   },
+   {
+    "site": "https://themedicube.co.kr",
+    "final": "https://themedicube.co.kr",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://medicube.us/cdn/shop/files/25ME_global.svg?v=1745386759&width=600",
+    "src": "site:https://medicube.us",
+    "score": 15,
+    "bytes": 12397
+   },
+   {
+    "file": "02.png",
+    "url": "https://cdn.shopify.com/s/files/1/0156/3905/2336/files/footer_logo.png?v=1740364313",
+    "src": "site:https://medicube.us",
+    "score": 10,
+    "bytes": 5336
+   },
+   {
+    "file": "03.png",
+    "url": "https://cdn.shopify.com/s/files/1/0623/3777/7895/files/ph_instagram-logo-fill.png",
+    "src": "site:https://medicube.us",
+    "score": 10,
+    "bytes": 954
+   },
+   {
+    "file": "04.svg",
+    "url": "https://medicube.us/cdn/shop/files/25ME_global.svg?v=1745386759\\u0026width=500",
+    "src": "site:https://medicube.us",
+    "score": 8,
+    "bytes": 12397
+   },
+   {
+    "file": "05.png",
+    "url": "https://medicube.us/cdn/shop/files/Social-sharing-image.png?v=1650608972",
+    "src": "site:https://medicube.us",
+    "score": 3,
+    "bytes": 18003
+   },
+   {
+    "file": "06.png",
+    "url": "https://medicube.us/cdn/shop/files/JP_favicon_96x_727dfbd6-6be7-4b84-a0a7-c80688b1963a.png?crop=center&height=32&v=1706162467&width=32",
+    "src": "site:https://medicube.us",
+    "score": 1,
+    "bytes": 1356
+   },
+   {
+    "file": "07.png",
+    "url": "https://themedicube.co.kr/web/upload/images/pc_logo_bk.png",
+    "src": "site:https://themedicube.co.kr",
+    "score": 10,
+    "bytes": 5603
+   },
+   {
+    "file": "08.png",
+    "url": "https://themedicube.co.kr/web/upload/share-image-1-40cb54b7d371a6df85ea3306ffaeb1b4.png",
+    "src": "site:https://themedicube.co.kr",
+    "score": 3,
+    "bytes": 36671
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "cosrx": {
+  "name": "Cosrx",
+  "sites": [
+   {
+    "site": "https://www.cosrx.com",
+    "final": "https://www.cosrx.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/120px-Apple_Pay_logo.svg.png",
+    "src": "site:https://www.cosrx.com",
+    "score": 10,
+    "bytes": 1862
+   },
+   {
+    "file": "02.png",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/120px-Google_Pay_Logo.svg.png",
+    "src": "site:https://www.cosrx.com",
+    "score": 10,
+    "bytes": 4180
+   },
+   {
+    "file": "03.png",
+    "url": "https://www.cosrx.com/cdn/shop/files/COSRX_150x.png?v=1658313147",
+    "src": "site:https://www.cosrx.com",
+    "score": 10,
+    "bytes": 2606
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://www.cosrx.com/cdn/shop/files/facebookimg_dedb55e4-9ae0-421a-b480-dbcd570723aa_1200x1200.jpg?v=1612428226",
+    "src": "site:https://www.cosrx.com",
+    "score": 3,
+    "bytes": 5521
+   },
+   {
+    "file": "05.png",
+    "url": "https://www.cosrx.com/cdn/shop/files/2_8fb22a57-55f6-4130-8683-29b321768c3c.png?crop=center&height=48&v=1725424736&width=48",
+    "src": "site:https://www.cosrx.com",
+    "score": 1,
+    "bytes": 306
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "the-ordinary": {
+  "name": "The Ordinary",
+  "sites": [
+   {
+    "site": "https://theordinary.com/en-us",
+    "final": "https://theordinary.com/en-us",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dw6d929203/images/brands-logo/theOrdinary-logo.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 9690
+   },
+   {
+    "file": "02.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dw57a52809/images/brands-logo/theordinary_black.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 1739
+   },
+   {
+    "file": "03.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dwc02e3c53/images/brands-logo/niod_black.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 568
+   },
+   {
+    "file": "04.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dw0cf36fca/images/brands-logo/loopha_black.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 993
+   },
+   {
+    "file": "05.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dwd84c8f4a/images/brands-logo/chemistry_black.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 1533
+   },
+   {
+    "file": "06.svg",
+    "url": "https://theordinary.com/on/demandware.static/Sites-deciem-us-Site/-/default/dw4fd04929/images/brands-logo/deciem_black.svg",
+    "src": "site:https://theordinary.com/en-us",
+    "score": 15,
+    "bytes": 410
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "anua": {
+  "name": "Anua",
+  "sites": [
+   {
+    "site": "https://anua.global",
+    "final": "https://anua.com/",
+    "ok": true
+   },
+   {
+    "site": "https://anua.us",
+    "final": "https://anua.com/",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://anua.com/cdn/shop/files/PNG_RGB_Primary_logo_ver2_2_255e833c-0e91-42df-96ca-0b7377ba7a8a.png?v=1779429699&width=247",
+    "src": "site:https://anua.com/",
+    "score": 15,
+    "bytes": 3644
+   },
+   {
+    "url": "https://anua.com/cdn/shop/t/100/assets/logo.png?v=27216",
+    "src": "site:https://anua.com/",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "file": "02.png",
+    "url": "https://anua.com/cdn/shop/files/anua-logo-w-512.png?v=1738656200\\u0026width=512",
+    "src": "site:https://anua.com/",
+    "score": 8,
+    "bytes": 6315
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://anua.com/cdn/shop/files/1200X600_ANUA.jpg?v=1738611627&width=2048",
+    "src": "site:https://anua.com/",
+    "score": 3,
+    "bytes": 11261
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://anua.com/cdn/shop/files/160X160_ANUA.jpg?v=1738611476&width=180",
+    "src": "site:https://anua.com/",
+    "score": 2,
+    "bytes": 5716
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://anua.com/cdn/shop/files/160X160_ANUA.jpg?v=1738611476&width=96",
+    "src": "site:https://anua.com/",
+    "score": 1,
+    "bytes": 3508
+   },
+   {
+    "file": "06.png",
+    "url": "https://anua.com/cdn/shop/files/PNG_RGB_Primary_logo_ver2_2_255e833c-0e91-42df-96ca-0b7377ba7a8a.png?v=1779429699&width=247",
+    "src": "site:https://anua.com/",
+    "score": 15,
+    "bytes": 3644
+   },
+   {
+    "url": "https://anua.com/cdn/shop/t/100/assets/logo.png?v=27216",
+    "src": "site:https://anua.com/",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "file": "07.png",
+    "url": "https://anua.com/cdn/shop/files/anua-logo-w-512.png?v=1738656200\\u0026width=512",
+    "src": "site:https://anua.com/",
+    "score": 8,
+    "bytes": 6315
+   },
+   {
+    "file": "08.jpg",
+    "url": "https://anua.com/cdn/shop/files/1200X600_ANUA.jpg?v=1738611627&width=2048",
+    "src": "site:https://anua.com/",
+    "score": 3,
+    "bytes": 11261
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "bioderma": {
+  "name": "Bioderma",
+  "sites": [
+   {
+    "site": "https://www.bioderma.us",
+    "final": "https://www.bioderma.us",
+    "ok": true
+   },
+   {
+    "site": "https://www.bioderma.com",
+    "final": "https://www.bioderma.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.bioderma.us/content/dam/bioderma/master/media-campaign/services/logo-asknaos-200x30.png",
+    "src": "site:https://www.bioderma.us",
+    "score": 10,
+    "bytes": 6689
+   },
+   {
+    "file": "02.png",
+    "url": "https://www.bioderma.us/content/dam/bioderma/master/media-campaign/services/naos-ecobiology-logo.png",
+    "src": "site:https://www.bioderma.us",
+    "score": 10,
+    "bytes": 8859
+   },
+   {
+    "file": "03.webp",
+    "url": "https://www.bioderma.us/etc.clientlibs/bioderma-v2/components/organisms/footer/v1/footer/clientlib-footer/resources/bioderma_logo_footer_1600_1x.webp",
+    "src": "site:https://www.bioderma.us",
+    "score": 10,
+    "bytes": 220674
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.bioderma.us/content/dam/bioderma/master/logos/naos-logo.png",
+    "src": "site:https://www.bioderma.us",
+    "score": 10,
+    "bytes": 55258
+   },
+   {
+    "file": "05.ico",
+    "url": "https://www.bioderma.us/etc.clientlibs/bioderma/clientlibs/clientlib-site/resources/images/bioderma-favicon.ico",
+    "src": "site:https://www.bioderma.us",
+    "score": 1,
+    "bytes": 9662
+   },
+   {
+    "file": "06.png",
+    "url": "https://www.bioderma.com/themes/custom/bioderma_theme/logo.png",
+    "src": "site:https://www.bioderma.com",
+    "score": 3,
+    "bytes": 24125
+   },
+   {
+    "file": "07.png",
+    "url": "https://www.bioderma.com/themes/custom/bioderma_theme/apple-touch-icon.png",
+    "src": "site:https://www.bioderma.com",
+    "score": 2,
+    "bytes": 2634
+   },
+   {
+    "file": "08.ico",
+    "url": "https://www.bioderma.com/themes/custom/bioderma_theme/favicon.ico",
+    "src": "site:https://www.bioderma.com",
+    "score": 1,
+    "bytes": 15086
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "axis-y": {
+  "name": "AXIS-Y",
+  "sites": [
+   {
+    "site": "https://axis-y.com",
+    "final": "https://www.axis-y.com/",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.axis-y.com/cdn/shop/files/AXIS-Y_LogoAv1_854c7e2a-6d70-42ea-ab76-112b44644fc6.png?crop=center&height=40&v=1741832265&width=300",
+    "src": "site:https://www.axis-y.com/",
+    "score": 15,
+    "bytes": 4147
+   },
+   {
+    "file": "02.png",
+    "url": "https://www.axis-y.com/cdn/shop/files/AXIS-Y_NewLogo-02_628c7e48-1afc-4628-a523-d92759845fb6.png?v=1676732893&width=260",
+    "src": "site:https://www.axis-y.com/",
+    "score": 10,
+    "bytes": 7277
+   },
+   {
+    "file": "03.png",
+    "url": "https://www.axis-y.com/cdn/shop/files/AXIS-Y_LogoAv1_854c7e2a-6d70-42ea-ab76-112b44644fc6.png?v=1741832265\\u0026width=500",
+    "src": "site:https://www.axis-y.com/",
+    "score": 8,
+    "bytes": 3535
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.axis-y.com/cdn/shop/files/5.5_Page_1-2_c9cb5697-4bc7-406b-bb20-0daed68fcc4f.png?v=1781072108",
+    "src": "site:https://www.axis-y.com/",
+    "score": 3,
+    "bytes": 1066728
+   },
+   {
+    "file": "05.png",
+    "url": "https://www.axis-y.com/cdn/shop/files/dd301f3fa3b7be26f8d7e513873e834f.png?crop=center&height=32&v=1775210660&width=32",
+    "src": "site:https://www.axis-y.com/",
+    "score": 1,
+    "bytes": 2000
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "eqqualberry": {
+  "name": "EqqualBerry",
+  "sites": [
+   {
+    "site": "https://eqqualberry.com",
+    "final": "https://eqqualberry.com",
+    "ok": true
+   },
+   {
+    "site": "https://www.eqqualberry.com",
+    "final": "https://www.eqqualberry.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://eqqualberry.cafe24.com/setting/SEO/SEO_2611.png",
+    "src": "site:https://eqqualberry.com",
+    "score": 3,
+    "bytes": 890763
+   },
+   {
+    "file": "02.ico",
+    "url": "https://eqqualberry.com/web/upload/favicon-4d68abb52d77d0a56dfe86d1e3047f50.ico",
+    "src": "site:https://eqqualberry.com",
+    "score": 1,
+    "bytes": 1784
+   },
+   {
+    "file": "03.png",
+    "url": "https://eqqualberry.cafe24.com/setting/SEO/SEO_2611.png",
+    "src": "site:https://www.eqqualberry.com",
+    "score": 3,
+    "bytes": 890763
+   },
+   {
+    "file": "04.ico",
+    "url": "https://www.eqqualberry.com/web/upload/favicon-4d68abb52d77d0a56dfe86d1e3047f50.ico",
+    "src": "site:https://www.eqqualberry.com",
+    "score": 1,
+    "bytes": 1784
+   }
+  ]
+ },
+ "mixsoon": {
+  "name": "Mixsoon",
+  "sites": [
+   {
+    "site": "https://mixsoon.us",
+    "final": "https://mixsoon.us",
+    "ok": true
+   },
+   {
+    "site": "https://www.mixsoon.com",
+    "final": "https://www.mixsoon.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://mixsoon.us/cdn/shop/files/2c033f04efc2ffb54d04b8b15ceceb30.png?v=1755158966&width=150",
+    "src": "site:https://mixsoon.us",
+    "score": 15,
+    "bytes": 2890
+   },
+   {
+    "file": "02.png",
+    "url": "https://mixsoon.us/cdn/shop/files/2c033f04efc2ffb54d04b8b15ceceb30.png?v=1755158966&width=110",
+    "src": "site:https://mixsoon.us",
+    "score": 15,
+    "bytes": 2157
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://mixsoon.us/cdn/shop/files/final_favicon.jpg?crop=center&height=32&v=1758682108&width=32",
+    "src": "site:https://mixsoon.us",
+    "score": 1,
+    "bytes": 1227
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://mixsoon.us/cdn/shop/files/final_favicon.jpg?crop=center&height=192&v=1758682108&width=192",
+    "src": "site:https://mixsoon.us",
+    "score": 1,
+    "bytes": 1439
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://mixsoon.us/cdn/shop/files/final_favicon.jpg?crop=center&height=512&v=1758682108&width=512",
+    "src": "site:https://mixsoon.us",
+    "score": 1,
+    "bytes": 1439
+   },
+   {
+    "file": "06.svg",
+    "url": "https://forsale.spaceship-cdn.com/static/latest/5.latest/assets/fonts/spaceship-logo.svg",
+    "src": "site:https://www.mixsoon.com",
+    "score": 15,
+    "bytes": 6938
+   },
+   {
+    "file": "07.svg",
+    "url": "https://forsale.spaceship-cdn.com/static/latest/5.latest/assets/fonts/spaceship-logo-small.svg",
+    "src": "site:https://www.mixsoon.com",
+    "score": 15,
+    "bytes": 853
+   },
+   {
+    "file": "08.png",
+    "url": "https://forsale.spaceship-cdn.com/static/latest/5.latest/assets/fonts/apple-touch-icon-57x57.png",
+    "src": "site:https://www.mixsoon.com",
+    "score": 2,
+    "bytes": 780
+   }
+  ]
+ },
+ "arencia": {
+  "name": "Arencia",
+  "sites": [
+   {
+    "site": "https://arencia.global",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   },
+   {
+    "site": "https://www.arencia.com",
+    "final": "https://www.arencia.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.arencia.com/web/upload/share-image-1-2e47fafa442d3cd04f7346bd7db97885.png",
+    "src": "site:https://www.arencia.com",
+    "score": 3,
+    "bytes": 28084
+   },
+   {
+    "file": "02.ico",
+    "url": "https://arencia.com/web/upload/favicon-9979509b84782351dc700683c763a473.ico",
+    "src": "site:https://www.arencia.com",
+    "score": 2,
+    "bytes": 15406
+   },
+   {
+    "file": "03.ico",
+    "url": "https://www.arencia.com/web/upload/favicon-9979509b84782351dc700683c763a473.ico",
+    "src": "site:https://www.arencia.com",
+    "score": 1,
+    "bytes": 15406
+   }
+  ]
+ },
+ "beauty-of-joseon": {
+  "name": "Beauty of Joseon",
+  "sites": [
+   {
+    "site": "https://beautyofjoseon.com",
+    "final": "https://beautyofjoseon.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://beautyofjoseon.com/cdn/shop/files/boj-logo-text-default.png?crop=center&height=45&v=1765267757&width=480",
+    "src": "site:https://beautyofjoseon.com",
+    "score": 15,
+    "bytes": 8905
+   },
+   {
+    "file": "02.png",
+    "url": "https://beautyofjoseon.com/cdn/shop/files/boj-logo-text-white_61e7bbc9-93ad-4d75-bfcd-ee9384c28da2.png?crop=center&height=46&v=1792979284&width=480",
+    "src": "site:https://beautyofjoseon.com",
+    "score": 15,
+    "bytes": 4080
+   },
+   {
+    "file": "03.png",
+    "url": "https://beautyofjoseon.com/cdn/shop/files/boj-logo-text-default.png?v=1765267757\\u0026width=500",
+    "src": "site:https://beautyofjoseon.com",
+    "score": 8,
+    "bytes": 40707
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://beautyofjoseon.com/cdn/shop/files/boj_domain.webp?v=1789192342",
+    "src": "site:https://beautyofjoseon.com",
+    "score": 3,
+    "bytes": 65340
+   },
+   {
+    "file": "05.png",
+    "url": "https://beautyofjoseon.com/cdn/shop/files/favicon-32x32_a44cdd13-dd46-4769-8e4f-8474f428f33c.png?crop=center&height=32&v=1738690375&width=32",
+    "src": "site:https://beautyofjoseon.com",
+    "score": 1,
+    "bytes": 530
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "la-roche-posay": {
+  "name": "La Roche-Posay",
+  "sites": [
+   {
+    "site": "https://www.laroche-posay.us",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   }
+  ],
+  "files": [],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "numbuzin": {
+  "name": "Numbuzin",
+  "sites": [
+   {
+    "site": "https://numbuzin.com",
+    "final": "https://numbuzin.com",
+    "ok": true
+   },
+   {
+    "site": "https://numbuzin.us",
+    "ok": false,
+    "error": "<urlopen error timed out>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://ecimg.cafe24img.com/pg1613b12558170092/numbuzin0828/web/upload/share-image-1-28ca7c2a482f3feecd85fe95e4172748.jpg",
+    "src": "site:https://numbuzin.com",
+    "score": 3,
+    "bytes": 43890
+   },
+   {
+    "file": "02.ico",
+    "url": "https://ecimg.cafe24img.com/pg1613b12558170092/numbuzin0828/web/upload/favicon-77c283c104255913dcadf2217237c581.ico",
+    "src": "site:https://numbuzin.com",
+    "score": 1,
+    "bytes": 1150
+   }
+  ]
+ },
+ "purito": {
+  "name": "Purito",
+  "sites": [
+   {
+    "site": "https://purito.com",
+    "final": "https://purito.com",
+    "ok": true
+   },
+   {
+    "site": "https://puritoseoul.com",
+    "ok": false,
+    "error": "<urlopen error timed out>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://purito.com/wp-content/uploads/2024/02/purito-og-image.jpg",
+    "src": "site:https://purito.com",
+    "score": 3,
+    "bytes": 66833
+   },
+   {
+    "file": "02.png",
+    "url": "https://purito.com/wp-content/uploads/2024/03/cropped-favicon-v2-1-180x180.png",
+    "src": "site:https://purito.com",
+    "score": 2,
+    "bytes": 10156
+   },
+   {
+    "file": "03.png",
+    "url": "https://purito.com/wp-content/uploads/2024/03/cropped-favicon-v2-1-32x32.png",
+    "src": "site:https://purito.com",
+    "score": 1,
+    "bytes": 1297
+   },
+   {
+    "file": "04.png",
+    "url": "https://purito.com/wp-content/uploads/2024/03/cropped-favicon-v2-1-192x192.png",
+    "src": "site:https://purito.com",
+    "score": 1,
+    "bytes": 11068
+   }
+  ]
+ },
+ "revuele": {
+  "name": "Revuele",
+  "sites": [
+   {
+    "site": "https://revuele.com",
+    "final": "https://revuele.com",
+    "ok": true
+   },
+   {
+    "site": "https://www.revuele.eu",
+    "final": "https://revuele.eu/",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/lovp_6s4zn20gx09yvbc53qpzd3dt7s/92281133a2787abf7c345749e4b91911_1794922633459.png",
+    "src": "site:https://revuele.eu/",
+    "score": 3,
+    "bytes": 881875
+   },
+   {
+    "file": "02.png",
+    "url": "https://revuele.eu/favicon.png",
+    "src": "site:https://revuele.eu/",
+    "score": 1,
+    "bytes": 1970
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "acm": {
+  "name": "ACM",
+  "sites": [
+   {
+    "site": "https://www.acm-lab.com",
+    "final": "https://www.acm-lab.com",
+    "ok": true
+   },
+   {
+    "site": "https://laboratoire-acm.com",
+    "ok": false,
+    "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'laboratoire-acm.com'. (_ssl.c:1011)>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.acm-lab.com/assets/img/logo-acmlab.png",
+    "src": "site:https://www.acm-lab.com",
+    "score": 15,
+    "bytes": 1648500
+   },
+   {
+    "file": "02.jpg",
+    "url": "https://www.acm-lab.com/assets/img/logo-ema-ff.jpg",
+    "src": "site:https://www.acm-lab.com",
+    "score": 10,
+    "bytes": 170290
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://www.acm-lab.com/assets/img/logo-ema-q.jpeg",
+    "src": "site:https://www.acm-lab.com",
+    "score": 10,
+    "bytes": 76337
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.acm-lab.com/assets/img/logo-asea.png",
+    "src": "site:https://www.acm-lab.com",
+    "score": 10,
+    "bytes": 147097
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://www.acm-lab.com/assets/img/logo-cre.jpg",
+    "src": "site:https://www.acm-lab.com",
+    "score": 10,
+    "bytes": 10700
+   },
+   {
+    "file": "06.png",
+    "url": "https://www.acm-lab.com/assets/img/apple-touch-icon.png",
+    "src": "site:https://www.acm-lab.com",
+    "score": 2,
+    "bytes": 35224
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "avene": {
+  "name": "Av\u00e8ne",
+  "sites": [
+   {
+    "site": "https://www.aveneusa.com",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   },
+   {
+    "site": "https://www.eau-thermale-avene.com",
+    "final": "https://www.eau-thermale-avene.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://www.eau-thermale-avene.com/var/dfp/storage/images/7/1/6/8/24278617-3-eng-CO/c9b06e323942-avene_logo_140x57-png",
+    "src": "site:https://www.eau-thermale-avene.com",
+    "score": 15,
+    "bytes": 10255
+   },
+   {
+    "file": "02.ico",
+    "url": "https://www.eau-thermale-avene.com/assets/themes/new_avene/images/favicon.ico",
+    "src": "site:https://www.eau-thermale-avene.com",
+    "score": 1,
+    "bytes": 15406
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "cerave": {
+  "name": "CeraVe",
+  "sites": [
+   {
+    "site": "https://www.cerave.com",
+    "final": "https://www.cerave.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://www.cerave.com/-/media/project/loreal/brand-sites/cerave/shared/baseline/cerave-logo-top.svg?rev=-1?w=0&hash=41C378B722C95406A0BEFDC141405349",
+    "src": "site:https://www.cerave.com",
+    "score": 8,
+    "bytes": 8379
+   },
+   {
+    "file": "02.png",
+    "url": "https://www.cerave.com/-/media/project/loreal/brand-sites/cerave/shared/baseline/cerave-favicon.png?rev=-1",
+    "src": "site:https://www.cerave.com",
+    "score": 1,
+    "bytes": 753
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "dr-althea": {
+  "name": "Dr.Althea",
+  "sites": [
+   {
+    "site": "https://dralthea.com",
+    "ok": false,
+    "error": "<urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1011)>"
+   },
+   {
+    "site": "https://www.dr-althea.com",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": []
+ },
+ "dr-melaxin": {
+  "name": "Dr.Melaxin",
+  "sites": [
+   {
+    "site": "https://drmelaxin.com",
+    "final": "https://drmelaxin.com",
+    "ok": true
+   },
+   {
+    "site": "https://www.drmelaxin.com",
+    "final": "https://www.drmelaxin.com",
+    "ok": true
+   }
+  ],
+  "files": []
+ },
+ "embryolisse": {
+  "name": "Embryolisse",
+  "sites": [
+   {
+    "site": "https://www.embryolisse.com",
+    "final": "https://embryolisse.com/",
+    "ok": true
+   },
+   {
+    "site": "https://embryolisseusa.com",
+    "final": "https://myhomeworkwriter.com/writers",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://embryolisse.com/images/EMBRYOLISSE_Identite_CMJN300_LOGO.png",
+    "src": "site:https://embryolisse.com/",
+    "score": 15,
+    "bytes": 48896
+   },
+   {
+    "file": "02.ico",
+    "url": "https://embryolisse.com/favicon.ico",
+    "src": "site:https://embryolisse.com/",
+    "score": 1,
+    "bytes": 7781
+   },
+   {
+    "file": "03.png",
+    "url": "https://myhomeworkwriter.com/assets/glory-logo.png",
+    "src": "site:https://myhomeworkwriter.com/writers",
+    "score": 15,
+    "bytes": 56998
+   },
+   {
+    "file": "04.png",
+    "url": "https://myhomeworkwriter.com/assets/favicon-glory.png",
+    "src": "site:https://myhomeworkwriter.com/writers",
+    "score": 1,
+    "bytes": 1215
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "kahi-seoul": {
+  "name": "KAHI Seoul",
+  "sites": [
+   {
+    "site": "https://kahiglobal.com",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   },
+   {
+    "site": "https://www.kahi.co.kr",
+    "final": "https://www.kahi.co.kr",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.kahi.co.kr/web/upload/logo/kahi_logo.png",
+    "src": "site:https://www.kahi.co.kr",
+    "score": 15,
+    "bytes": 2500
+   },
+   {
+    "file": "02.png",
+    "url": "https://www.kahi.co.kr/web/upload/logo/kahi_logo_w.png",
+    "src": "site:https://www.kahi.co.kr",
+    "score": 10,
+    "bytes": 3095
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://www.kahi.co.kr/web/upload/share-image-1-2186637b576c1ac017ec8e8dd058bcb5.jpg",
+    "src": "site:https://www.kahi.co.kr",
+    "score": 3,
+    "bytes": 176883
+   },
+   {
+    "file": "04.png",
+    "url": "https://kahi.co.kr/web/kahi/favicon/apple-icon-57x57.png",
+    "src": "site:https://www.kahi.co.kr",
+    "score": 2,
+    "bytes": 1551
+   },
+   {
+    "url": "https://kahi.co.kr/web/kahi/favicon/favicon/apple-icon-60x60.png",
+    "src": "site:https://www.kahi.co.kr",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "file": "05.png",
+    "url": "https://kahi.co.kr/web/kahi/favicon/apple-icon-72x72.png",
+    "src": "site:https://www.kahi.co.kr",
+    "score": 2,
+    "bytes": 1818
+   }
+  ]
+ },
+ "mavala": {
+  "name": "Mavala",
+  "sites": [
+   {
+    "site": "https://www.mavala.com",
+    "final": "https://www.mavala.com",
+    "ok": true
+   },
+   {
+    "site": "https://www.mavala.ch",
+    "final": "https://www.mavala.com/",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://www.mavala.com/icons/favicon.svg",
+    "src": "site:https://www.mavala.com",
+    "score": 1,
+    "bytes": 379
+   },
+   {
+    "file": "02.svg",
+    "url": "https://www.mavala.com/icons/favicon.svg",
+    "src": "site:https://www.mavala.com/",
+    "score": 1,
+    "bytes": 379
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "neutrogena": {
+  "name": "Neutrogena",
+  "sites": [
+   {
+    "site": "https://www.neutrogena.com",
+    "final": "https://www.neutrogena.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://images.ctfassets.net/3zfcttr0ztpr/6tUl8rLVln9RPBMajmeqfv/35a0cd2b60bb2b6297afeb4d21911a59/NTG_LOGO_1.svg",
+    "src": "site:https://www.neutrogena.com",
+    "score": 15,
+    "bytes": 7303
+   },
+   {
+    "file": "02.jpg",
+    "url": "https://images.ctfassets.net/3zfcttr0ztpr/7Bw59K58XbwJgTMWgZk8kD/282908c52782bd9a482ee116ddb8baf0/hp-mod6-20260731.webp?fm=jpg&w=800&q=80",
+    "src": "site:https://www.neutrogena.com",
+    "score": 10,
+    "bytes": 18456
+   },
+   {
+    "file": "03.ico",
+    "url": "https://assets.ctfassets.net/3zfcttr0ztpr/1jqAvzpObKRDdBig3nSPCC/4c85964ad6c53c01d3a4c24602f14b15/favicon.ico",
+    "src": "site:https://www.neutrogena.com",
+    "score": 1,
+    "bytes": 7550
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "paula-s-choice": {
+  "name": "Paula's Choice",
+  "sites": [
+   {
+    "site": "https://www.paulaschoice.com",
+    "final": "https://www.paulaschoice.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.svg",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/dw8b4ff1a6/images/header/logo.svg",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 10,
+    "bytes": 8569
+   },
+   {
+    "file": "02.svg",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/dw86bb1847/images/header/logo.svg",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 8,
+    "bytes": 8569
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/dw5dd89f2a/share.jpg",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 3,
+    "bytes": 91434
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/images/favicons/favicon-192.png",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 2,
+    "bytes": 2789
+   },
+   {
+    "file": "05.png",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/images/favicons/favicon-512.png",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 2,
+    "bytes": 8083
+   },
+   {
+    "file": "06.png",
+    "url": "https://www.paulaschoice.com/on/demandware.static/-/Library-Sites-paulachoice/default/images/favicons/favicon-152.png",
+    "src": "site:https://www.paulaschoice.com",
+    "score": 2,
+    "bytes": 2163
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ },
+ "qv": {
+  "name": "QV",
+  "sites": [
+   {
+    "site": "https://www.qvskincare.com",
+    "final": "https://www.qvskincare.com",
+    "ok": true
+   },
+   {
+    "site": "https://www.egopharm.com",
+    "final": "https://www.egopharm.com/global.html",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://www.qvskincare.com/qv-asia/_jcr_content/root/contentcontainer/par/image_1749902779.coreimg.png/1718583159171/qv-logo-footer-1920x200.png",
+    "src": "site:https://www.qvskincare.com",
+    "score": 10,
+    "bytes": 4539
+   },
+   {
+    "url": "http://www.qvskincare.com/qv-asia.thumb.800.480.png?ck=1739935801",
+    "src": "site:https://www.qvskincare.com",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "url": "https://www.qvskincare.com/content/qvskincare/qv-asia.thumb.800.480.png?ck=1739935801",
+    "src": "site:https://www.qvskincare.com",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "url": "http://www.egopharm.com/global.thumb.800.480.png?ck=1792715282",
+    "src": "site:https://www.egopharm.com/global.html",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "url": "https://www.egopharm.com/content/egopharm/global.thumb.800.480.png?ck=1792715282",
+    "src": "site:https://www.egopharm.com/global.html",
+    "error": "HTTP Error 404: Not Found"
+   }
+  ],
+  "commons_error": "HTTP Error 429: We suspect this request is automated: if so, please respect our robot policy. If you think you were incorrectly blocked, please contact noc@wiki"
+ }
+}
