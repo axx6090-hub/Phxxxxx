@@ -221,11 +221,14 @@ const askGateway = async (key, imageBase64, prompt, { maxTokens = 2000, maxTries
     }
     console.error("xingchi gateway", model, out.status, out.error); // no key, no image
     if (remembered === model) remembered = "";
-    if (!tryNext(out.status)) break;
+    if (!tryNext(out.status) || /client_not_allowed/.test(out.error || "")) break;
   }
   const last = tried[tried.length - 1];
   const status = last ? last.status : 0;
-  const message = !last ? "ما ضل وقت نجرب موديل." : status === 0 ? "تعذّر الاتصال بـ xingchiapi." : gatewayMessage(status);
+  const blocked = tried.some((t) => /client_not_allowed|chat_completions_disabled/.test(t.error));
+  const message = blocked
+    ? "حساب xingchiapi يسمح بس لبرامج البرمجة (مثل Codex)، فما يشتغل مع الموقع."
+    : !last ? "ما ضل وقت نجرب موديل." : status === 0 ? "تعذّر الاتصال بـ xingchiapi." : gatewayMessage(status);
   const err = new HttpError(status === 429 ? 429 : status === 401 || status === 402 ? 400 : 502, message);
   err.tried = tried;
   throw err;
