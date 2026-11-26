@@ -36,7 +36,7 @@ jobs:
           REACT_APP_BACKEND_URL: https://wellness-beauty-6.preview.emergentagent.com
           PUBLIC_URL: .
           CI: false
-        run: yarn build
+        run: node scripts/write-version.js && yarn build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -7,3 +7,7 @@ frontend/.env
 .DS_Store
 frontend/public/staticData.json
 __pycache__/
+
+# written at build time
+frontend/public/version.json
+frontend/.env.production.local
