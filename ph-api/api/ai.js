@@ -1,6 +1,6 @@
 // GET  /api/ai — public: { enabled } tells the admin panel whether the gateway key is set
-// POST /api/ai — admin only: reads a product photo through the XingChi gateway
-//   body { model, imageBase64, prompt } -> { text }
+// POST /api/ai — admin only: reads a product photo (and/or page text) through the XingChi gateway
+//   body { model, imageBase64?, prompt } -> { text }
 // The key comes from the XINGCHI_API_KEY env var and never leaves the server.
 import { route, readBody, HttpError } from "../lib/http.js";
 import { requireAdmin } from "../lib/auth.js";
@@ -8,7 +8,7 @@ import { requireAdmin } from "../lib/auth.js";
 const BASE_URL = () => (process.env.XINGCHI_BASE_URL || "https://xingchiapi.com").replace(/\/+$/, "");
 const MODELS = { "gemini-2.5-flash-lite": "gemini", "claude-haiku-5-5": "anthropic", "gemini-2.5-flash": "gemini" };
 const MAX_IMAGE_CHARS = 3_000_000; // ~2.2 MB JPEG, well under the 4.5 MB body limit
-const MAX_PROMPT_CHARS = 8000;
+const MAX_PROMPT_CHARS = 14000; // room for a product page's text
 
 // best-effort limit per admin per server instance
 const recent = new Map();
@@ -29,7 +29,7 @@ const buildRequest = (key, model, imageBase64, prompt) => {
         model,
         max_tokens: 2000,
         messages: [{ role: "user", content: [
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
+          ...(imageBase64 ? [{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } }] : []),
           { type: "text", text: prompt },
         ] }],
       },
@@ -40,7 +40,7 @@ const buildRequest = (key, model, imageBase64, prompt) => {
     url: `${BASE_URL()}/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     headers: { "content-type": "application/json", "x-goog-api-key": key, authorization: `Bearer ${key}` },
     body: {
-      contents: [{ role: "user", parts: [{ inline_data: { mime_type: "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
+      contents: [{ role: "user", parts: [...(imageBase64 ? [{ inline_data: { mime_type: "image/jpeg", data: imageBase64 } }] : []), { text: prompt }] }],
       generationConfig: { temperature: 0.2, maxOutputTokens: 2000, responseMimeType: "application/json" },
     },
     read: (json) => (((json.candidates || [])[0] || {}).content?.parts || []).map((p) => p.text || "").join(""),
@@ -65,7 +65,7 @@ export default route({
     const model = String(body.model || "");
     if (!MODELS[model]) throw new HttpError(400, "موديل غير مدعوم.");
     const imageBase64 = typeof body.imageBase64 === "string" ? body.imageBase64 : "";
-    if (!imageBase64 || imageBase64.length > MAX_IMAGE_CHARS || !/^[A-Za-z0-9+/=]+$/.test(imageBase64)) throw new HttpError(400, "الصورة غير صالحة أو كبيرة.");
+    if (imageBase64 && (imageBase64.length > MAX_IMAGE_CHARS || !/^[A-Za-z0-9+/=]+$/.test(imageBase64))) throw new HttpError(400, "الصورة غير صالحة أو كبيرة.");
     const prompt = typeof body.prompt === "string" ? body.prompt.slice(0, MAX_PROMPT_CHARS) : "";
     if (!prompt) throw new HttpError(400, "الطلب ناقص.");
 

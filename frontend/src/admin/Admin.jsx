@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, Sparkles, X, Search } from "lucide-react";
+import { Plus, Trash2, Sparkles, X, Search, Link2 } from "lucide-react";
 import { loadStoreData, publishStore, REPO_OWNER, REPO_NAME } from "./github";
-import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, makeWhiteBackground, resizeForAnalysis, dataUrlToBase64, serverAiAvailable } from "./ai";
+import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageToFile, normalizeLink, blobToDataUrl, dataUrlToBase64, makeWhiteBackground, resizeForAnalysis, serverAiAvailable } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
@@ -102,6 +102,8 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
   const fileRef = useRef(null);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
+  const [link, setLink] = useState("");
+
   const pickFile = (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
@@ -112,6 +114,41 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
     const reader = new FileReader();
     reader.onload = () => setOriginal(reader.result);
     reader.readAsDataURL(f);
+  };
+
+  // Cuts the product out of its photo onto white; adds a note when it can't.
+  const whiteImage = async (f, newNotes) => {
+    const white = await makeWhiteBackground(f, (label, ratio) => setStatus(`${label} ${Math.round(ratio * 100)}%`));
+    setProcessed(white.dataUrl);
+    setRemoved(white.removed);
+    if (!white.removed) newNotes.push("ما قدرنا نشيل الخلفية تلقائياً على هذا الجهاز، فحطينا الصورة الأصلية على خلفية بيضاء.");
+  };
+
+  // Puts the AI's answer into the form. `fixedPrice` is a price read from the page in IQD.
+  const applyListing = (r, newNotes, { fixedPrice = 0, pageNote = "" } = {}) => {
+    const price = fixedPrice || r.suggested_price_iqd;
+    setForm((f) => ({
+      ...f,
+      name: r.name_ar || f.name,
+      name_en: r.name_en || f.name_en,
+      description: r.description_ar || f.description,
+      brand: r.brand || f.brand,
+      skin_type: Array.isArray(r.skin_type) ? r.skin_type.filter((s) => data.skinTypes.some((t) => t.id === s)) : f.skin_type,
+      ...(price > 0 && !f.price ? { price: String(price) } : {}),
+    }));
+    // the AI only suggests a section; the admin's own pick always wins
+    if (data.categories.some((c) => c.id === r.category)) {
+      setAiCategory(r.category);
+      setForm((f) => (f.category ? f : { ...f, category: r.category }));
+    }
+    if (fixedPrice > 0) {
+      newNotes.push(`السعر ${Number(fixedPrice).toLocaleString("en")} د.ع مأخوذ من صفحة المنتج، راجعه قبل الموافقة.`);
+    } else if (r.suggested_price_iqd > 0) {
+      newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — تقدير من الذكاء الاصطناعي بدون بحث بالإنترنت، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}${pageNote}`);
+    } else {
+      newNotes.push(`ما لگينا سعر مضمون لهذا المنتج، فاكتب السعر بنفسك.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}${pageNote}`);
+    }
+    if (r.confident === false) newNotes.push("المعلومات ما كانت واضحة، فراجع الاسم والوصف قبل الحفظ.");
   };
 
   const runAi = async () => {
@@ -129,10 +166,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
             .catch((err) => ({ ok: false, err }))
         : Promise.resolve(null);
 
-      const white = await makeWhiteBackground(file, (label, ratio) => setStatus(`${label} ${Math.round(ratio * 100)}%`));
-      setProcessed(white.dataUrl);
-      setRemoved(white.removed);
-      if (!white.removed) newNotes.push("ما قدرنا نشيل الخلفية تلقائياً على هذا الجهاز، فحطينا الصورة الأصلية على خلفية بيضاء.");
+      await whiteImage(file, newNotes);
 
       setStatus("قراءة اسم المنتج ووصفه...");
       const result = await analysis;
@@ -141,29 +175,55 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       } else if (!result.ok) {
         newNotes.push(`تحليل الاسم والوصف فشل: ${result.err.message}`);
       } else {
-        const r = result.r;
-        set({
-          name: r.name_ar || form.name,
-          name_en: r.name_en || form.name_en,
-          description: r.description_ar || form.description,
-          brand: r.brand || form.brand,
-          skin_type: Array.isArray(r.skin_type) ? r.skin_type.filter((s) => data.skinTypes.some((t) => t.id === s)) : form.skin_type,
-          ...(r.suggested_price_iqd > 0 && !form.price ? { price: String(r.suggested_price_iqd) } : {}),
-        });
-        // the AI only suggests a section; the admin's own pick always wins
-        if (data.categories.some((c) => c.id === r.category)) {
-          setAiCategory(r.category);
-          setForm((f) => (f.category ? f : { ...f, category: r.category }));
-        }
-        if (r.suggested_price_iqd > 0) {
-          newNotes.push(`السعر المقترح ${Number(r.suggested_price_iqd).toLocaleString("en")} د.ع — تقدير من الذكاء الاصطناعي بدون بحث بالإنترنت، راجعه قبل الموافقة.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
-        } else {
-          newNotes.push(`ما لگينا سعر مضمون لهذا المنتج، فاكتب السعر بنفسك.${r.price_note_ar ? ` (${r.price_note_ar})` : ""}`);
-        }
-        if (r.confident === false) newNotes.push("الكتابة على العلبة ما كانت واضحة، فراجع الاسم والوصف قبل الحفظ.");
+        applyListing(result.r, newNotes);
       }
     } catch (err) {
       setError(err.message || "صار خطأ أثناء المعالجة.");
+    } finally {
+      setNotes(newNotes);
+      setStatus("");
+      setBusy(false);
+    }
+  };
+
+  const runLink = async () => {
+    const url = normalizeLink(link);
+    if (!url) return setError("الرابط غير صحيح. الصق رابط صفحة المنتج كامل، مثل https://...");
+    if (!ai.serverAi && !ai.browserKey) return setError("حط مفتاح xingchiapi بتبويب الإعدادات أول، بعدين جرّب الرابط.");
+    setBusy(true);
+    setError("");
+    setNotes([]);
+    const newNotes = [];
+    try {
+      setStatus("قراءة صفحة المنتج...");
+      const serverToken = ai.serverAi ? ai.token : "";
+      const page = await readProductLink({ serverToken, url });
+
+      let imgFile = null;
+      for (const src of page ? [page.image_data, ...(page.images || [])] : []) {
+        imgFile = await imageToFile(src);
+        if (imgFile) break;
+      }
+      const analysisImage = imgFile ? await resizeForAnalysis(imgFile).catch(() => "") : "";
+
+      setStatus("الذكاء الاصطناعي يكتب الاسم والوصف...");
+      const r = await analyzeLink({ serverToken, browserKey: ai.browserKey, model: ai.model, url, page, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes });
+      if (!imgFile && r.image_url) imgFile = await imageToFile(r.image_url);
+
+      const iqd = page && page.price > 0 && page.currency === "IQD" ? Math.round(page.price) : 0;
+      const pageNote = page && page.price > 0 && page.currency && page.currency !== "IQD" ? ` السعر بالصفحة ${page.price} ${page.currency}.` : "";
+      applyListing(r, newNotes, { fixedPrice: iqd, pageNote });
+      if (!r.pageRead) newNotes.push("ما تأكدنا إن الذكاء الاصطناعي فتح الصفحة، يمكن كتب من الرابط بس. راجع الاسم والوصف زين قبل الموافقة.");
+
+      if (imgFile) {
+        setFile(imgFile);
+        setOriginal(await blobToDataUrl(imgFile));
+        await whiteImage(imgFile, newNotes);
+      } else {
+        newNotes.push("ما گدرنا نجيب صورة المنتج من الرابط. احفظ الصورة من الصفحة وارفعها بزر «اختيار صورة».");
+      }
+    } catch (err) {
+      setError(err.message || "ما گدرنا نقرا الرابط.");
     } finally {
       setNotes(newNotes);
       setStatus("");
@@ -204,6 +264,20 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
         <h2 className="text-xl font-bold text-gray-900">{editing ? "تعديل منتج" : "إضافة منتج"}</h2>
         {onCancel && <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-700"><X size={22} /></button>}
       </div>
+
+      {!editing && (
+        <div className="rounded-2xl border-2 border-pink-100 bg-pink-50/40 p-4" data-testid="admin-link-box">
+          <label className="block text-sm font-bold text-gray-800 mb-1.5" htmlFor="admin-link">إضافة من رابط</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input id="admin-link" value={link} onChange={(e) => setLink(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!busy) runLink(); } }}
+              dir="ltr" inputMode="url" autoComplete="off" placeholder="https://..." className={inputCls} data-testid="admin-link" />
+            <button type="button" onClick={runLink} disabled={busy || !link.trim()} className={`${btnPrimary} shrink-0 flex items-center justify-center gap-2`} data-testid="admin-link-btn">
+              <Link2 size={18} /> {busy ? "جاري القراءة..." : "جيب المنتج"}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">الصق رابط صفحة المنتج من أي متجر، ويتعبى الاسم والوصف والصورة والسعر. أنت تختار القسم وتراجع كلشي قبل الموافقة. أو اختار صورة تحت.</p>
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
