@@ -72,22 +72,59 @@ const buildRequest = (key, model, imageBase64, prompt, maxTokens = 2000) => {
       read: (json) => (((json.candidates || [])[0] || {}).content?.parts || []).map((p) => p.text || "").join(""),
     };
   }
+  // OpenAI models: this gateway only serves the Responses API
   return {
-    url: `${BASE_URL()}/v1/chat/completions`,
-    headers: { "content-type": "application/json", ...authHeaders(key) },
+    url: `${BASE_URL()}/v1/responses`,
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream", ...authHeaders(key) },
     body: {
       model,
-      max_tokens: maxTokens,
-      messages: [{ role: "user", content: [
-        { type: "text", text: prompt },
-        ...(imageBase64 ? [{ type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }] : []),
+      instructions: "You help an online pharmacy fill in product listings. Follow the user's format exactly.",
+      store: false,
+      stream: true,
+      input: [{ role: "user", content: [
+        { type: "input_text", text: prompt },
+        ...(imageBase64 ? [{ type: "input_image", image_url: `data:image/jpeg;base64,${imageBase64}` }] : []),
       ] }],
     },
-    read: (json) => {
-      const c = ((json.choices || [])[0] || {}).message?.content;
-      return Array.isArray(c) ? c.map((p) => p.text || "").join("") : String(c || "");
-    },
+    read: readResponses,
   };
+};
+
+/** Text of a Responses API answer, from a JSON body or from its event stream. */
+const responseText = (resp) => {
+  if (!resp || typeof resp !== "object") return "";
+  if (typeof resp.output_text === "string" && resp.output_text) return resp.output_text;
+  return (resp.output || [])
+    .flatMap((o) => (Array.isArray(o.content) ? o.content : []))
+    .filter((c) => c && (c.type === "output_text" || c.type === "text"))
+    .map((c) => c.text || "")
+    .join("");
+};
+const readResponses = (raw) => {
+  const t = String(raw || "");
+  if (!/^\s*(event:|data:)/m.test(t)) {
+    try {
+      return responseText(JSON.parse(t));
+    } catch (e) {
+      return "";
+    }
+  }
+  let deltas = "";
+  let final = "";
+  for (const line of t.split(/\r?\n/)) {
+    if (!line.startsWith("data:")) continue;
+    const data = line.slice(5).trim();
+    if (!data || data === "[DONE]") continue;
+    let ev;
+    try {
+      ev = JSON.parse(data);
+    } catch (e) {
+      continue;
+    }
+    if (ev.type === "response.output_text.delta" && typeof ev.delta === "string") deltas += ev.delta;
+    else if ((ev.type === "response.completed" || ev.type === "response.done") && ev.response) final = responseText(ev.response) || final;
+  }
+  return final || deltas;
 };
 
 const gatewayMessage = (status) =>
@@ -150,14 +187,19 @@ const callOnce = async (key, model, imageBase64, prompt, timeoutMs, maxTokens) =
   }
   const raw = await res.text().catch(() => "");
   if (!res.ok) return { ok: false, status: res.status, error: snippet(raw) };
-  let json;
-  try {
-    json = JSON.parse(raw);
-  } catch (e) {
-    return { ok: false, status: 502, error: "not json" };
+  let text;
+  if (r.read === readResponses) {
+    text = String(readResponses(raw) || "");
+  } else {
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch (e) {
+      return { ok: false, status: 502, error: "not json" };
+    }
+    text = String(r.read(json) || "");
   }
-  const text = String(r.read(json) || "");
-  if (!text.trim()) return { ok: false, status: 502, error: "empty answer" };
+  if (!text.trim()) return { ok: false, status: 502, error: `empty answer: ${snippet(raw)}` };
   return { ok: true, status: res.status, text };
 };
 
