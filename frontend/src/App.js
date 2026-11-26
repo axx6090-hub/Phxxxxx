@@ -869,7 +869,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState(() => {
     const saved = loadCustomer();
-    return { phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
+    return { name: saved.name || "", phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
   });
   const [sent, setSent] = useState(false);
   const [orderUrl, setOrderUrl] = useState("");
@@ -884,6 +884,7 @@ const Checkout = () => {
   const addressRequired = form.delivery && !isKidsVideoOnly;
 
   const ADDRESS_ERROR = "اكتبي العنوان حتى نوصل الطلب";
+  const NAME_ERROR = "اكتبي اسمج حتى نعرف الطلب لمن";
   // the error sits next to its field, which may be scrolled off screen: bring it into view
   const focusField = (testId) => {
     const el = document.querySelector(`[data-testid="${testId}"]`);
@@ -900,6 +901,11 @@ const Checkout = () => {
       return;
     }
 
+    if (!isKidsVideoOnly && !form.name.trim()) {
+      setSubmitError(NAME_ERROR);
+      focusField("checkout-name");
+      return;
+    }
     if ((!isKidsVideoOnly || form.phone.trim()) && !isIraqiPhone(form.phone)) {
       setPhoneError("اكتبي رقم هاتف عراقي صحيح من 11 رقم، مثل 07701234567");
       focusField("checkout-phone");
@@ -914,7 +920,8 @@ const Checkout = () => {
     setSubmitError("");
     const phone = form.phone.trim() ? normalizeIraqiPhone(form.phone) : "";
     const deliveryLabel = form.delivery ? "توصيل" : "بدون توصيل (استلام)";
-    const customer = { name: "", phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
+    const name = form.name.trim().slice(0, 80);
+    const customer = { name, phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
 
     // 1) open the WhatsApp tab now, while we still have the tap
     const pendingTab = openPendingTab();
@@ -952,6 +959,7 @@ const Checkout = () => {
       "━━━━━━━━━━━━━━━",
       "",
       "📞 بيانات التوصيل",
+      `• الاسم: ${name || "غير مذكور"}`,
       `• الهاتف: ${phone || "غير مذكور"}`,
       `• التوصيل: ${deliveryLabel}`,
       `• العنوان: ${form.address.trim() || "غير مذكور"}`,
@@ -971,7 +979,7 @@ const Checkout = () => {
       "شكراً لطلبكم 💕"
     ].filter((l) => l !== null).join("\n");
 
-    saveCustomer({ phone, delivery: form.delivery, address: form.address.trim() });
+    saveCustomer({ name, phone, delivery: form.delivery, address: form.address.trim() });
     const url = buildWhatsAppUrl(lines);
 
     // 3) send the WhatsApp tab to the chat. If the browser blocked the tab (Instagram/TikTok
@@ -1057,12 +1065,18 @@ const Checkout = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">إتمام الطلب</h1>
-      <p className="text-sm text-gray-500 mb-6">بس رقمج وعنوانج، والدفع عند الاستلام 💵</p>
+      <p className="text-sm text-gray-500 mb-6">بس اسمج ورقمج وعنوانج، والدفع عند الاستلام 💵</p>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <form onSubmit={handleSubmit} noValidate className="lg:col-span-3 min-w-0 bg-white rounded-3xl border border-pink-100 shadow-sm p-5 sm:p-7 space-y-5" data-testid="checkout-form">
           {isKidsVideoOnly && (
             <p className="text-sm text-pink-600 bg-pink-50 rounded-xl p-3">طلب فيديو الأطفال ما يحتاج بيانات توصيل، كل الحقول اختيارية.</p>
           )}
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">الاسم {optional}</label>
+            <input required={!isKidsVideoOnly} value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); if (submitError === NAME_ERROR) setSubmitError(""); }} placeholder="اسمج الكامل" autoComplete="name" maxLength={80} className={submitError === NAME_ERROR ? fieldCls.replace("border-pink-100", "border-red-400") : fieldCls} data-testid="checkout-name" />
+            {submitError === NAME_ERROR && <p className="text-red-500 text-xs mt-1.5" data-testid="checkout-name-error">{NAME_ERROR}</p>}
+          </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">رقم الهاتف {optional}</label>
@@ -1119,7 +1133,7 @@ const Checkout = () => {
             <div className="flex justify-between text-lg font-extrabold pt-1.5 border-t border-pink-200"><span>المبلغ الإجمالي</span><span className="text-pink-600" data-testid="checkout-total">{formatPrice(totalPrice + deliveryFee)}</span></div>
           </div>
 
-          {submitError && submitError !== ADDRESS_ERROR && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
+          {submitError && submitError !== ADDRESS_ERROR && submitError !== NAME_ERROR && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
           <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
