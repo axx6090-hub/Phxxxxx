@@ -6,6 +6,7 @@ import { ShoppingBag, Heart, Search, X, ChevronLeft, Plus, Minus, Trash2, Messag
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
+import { optimized, fallbackTo } from "./lib/img";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
 // exists. In that case reload once from the server instead of showing a blank page.
@@ -300,7 +301,7 @@ const CartDrawer = () => {
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3 pb-4 border-b border-pink-50" data-testid={`cart-item-${item.id}`}>
-                  <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg bg-pink-50" />
+                  <img src={optimized(item.image, 256)} onError={fallbackTo(item.image)} alt={item.name} loading="lazy" className="w-20 h-20 object-cover rounded-lg bg-pink-50" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium line-clamp-2 text-gray-800 mb-1">{item.name}</p>
                     <p className="text-pink-600 font-bold text-sm mb-2">{formatPrice(item.price)}</p>
@@ -371,7 +372,7 @@ const ProductCard = ({ product }) => {
 
       <Link to={`/product/${product.id}`} className="block">
         <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-50 overflow-hidden">
-          <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={optimized(product.image, 640)} onError={fallbackTo(product.image)} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
       </Link>
       <div className="p-4">
@@ -441,7 +442,7 @@ const Hero = () => {
         <div className="relative aspect-[16/9] sm:aspect-[21/8] overflow-hidden">
           {slides.map((s, idx) => (
             <Link key={idx} to={s.link} className={`absolute inset-0 transition-opacity duration-1000 ${idx === i ? "opacity-100" : "opacity-0"}`}>
-              <img src={s.img} alt={s.title} className="w-full h-full object-cover" />
+              <img src={optimized(s.img, 1080)} onError={fallbackTo(s.img)} alt={s.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-l from-pink-900/40 via-transparent to-transparent" />
             </Link>
           ))}
@@ -548,7 +549,7 @@ const CategoriesSection = () => {
             <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl overflow-hidden mb-2 p-2 group-hover:shadow-lg transition">
               {categoryImage(c) ? (
                 <div className="w-full h-full bg-white rounded-xl overflow-hidden flex items-center justify-center">
-                  <img src={categoryImage(c)} alt={c.name} loading="lazy" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
+                  <img src={optimized(categoryImage(c), 256)} onError={fallbackTo(categoryImage(c))} alt={c.name} loading="lazy" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
                 </div>
               ) : (
                 <span className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl group-hover:scale-110 transition-transform" aria-hidden="true">{c.emoji}</span>
@@ -576,7 +577,7 @@ const SkinTypesSection = () => {
         {types.map((t) => (
           <Link key={t.id} to={`/collection/skin-${t.id}`} className="group text-center" data-testid={`skin-type-${t.id}`}>
             <div className="aspect-square rounded-2xl overflow-hidden mb-2 relative group-hover:shadow-lg transition">
-              <img src={t.image} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+              <img src={optimized(t.image, 256)} onError={fallbackTo(t.image)} alt={t.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
               <div className="absolute inset-0 bg-gradient-to-t from-pink-900/60 to-transparent" />
               <p className="absolute bottom-3 inset-x-0 text-white font-bold text-sm">{t.name}</p>
             </div>
@@ -745,7 +746,7 @@ const ProductDetail = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid md:grid-cols-2 gap-10">
         <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-3xl overflow-hidden">
-          <img src={product.image} alt={product.name} className="w-full h-full object-contain aspect-square" data-testid="product-detail-image" />
+          <img src={optimized(product.image, 1080)} onError={fallbackTo(product.image)} alt={product.name} className="w-full h-full object-contain aspect-square" data-testid="product-detail-image" />
         </div>
         <div className="flex flex-col">
           {product.badge && <span className="self-start bg-[#e91e63] text-white text-xs font-bold px-3 py-1 rounded-full mb-4">{product.badge}</span>}
@@ -1119,7 +1120,7 @@ const Checkout = () => {
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {items.map((i) => (
               <div key={i.id} className="flex gap-3 items-start">
-                <img src={i.image} alt={i.name} className="w-14 h-14 rounded-xl object-cover bg-white shrink-0" />
+                <img src={optimized(i.image, 256)} onError={fallbackTo(i.image)} alt={i.name} className="w-14 h-14 rounded-xl object-cover bg-white shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium line-clamp-2">{i.name}</p>
                   <p className="text-xs text-gray-500 mt-1">{i.qty} × {formatPrice(i.price)}</p>

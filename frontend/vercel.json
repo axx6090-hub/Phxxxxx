@@ -3,5 +3,162 @@
   "framework": "create-react-app",
   "installCommand": "yarn install --frozen-lockfile",
   "buildCommand": "cp src/staticData.json public/staticData.json && CI=false PUBLIC_URL=/ yarn build",
-  "outputDirectory": "build"
+  "outputDirectory": "build",
+  "images": {
+    "sizes": [
+      256,
+      640,
+      1080
+    ],
+    "qualities": [
+      75
+    ],
+    "formats": [
+      "image/webp"
+    ],
+    "minimumCacheTTL": 2678400,
+    "localPatterns": [
+      {
+        "pathname": "^/images/.*$"
+      }
+    ],
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "anua.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "arencia.us"
+      },
+      {
+        "protocol": "https",
+        "hostname": "assets.unileversolutions.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "back-ac-prod.bioderma.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "beautyofjoseon.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "ca.beautyofjoseon.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "cafe24img.poxo.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "cdn.shopify.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "customer-assets.emergentagent.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "draltheaofficial.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "drmelaxin.us"
+      },
+      {
+        "protocol": "https",
+        "hostname": "egopharm.onpackonshelf.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "embryolisse.fr"
+      },
+      {
+        "protocol": "https",
+        "hostname": "eqqualberry.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "eqqualberryglobal.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "images.ctfassets.net"
+      },
+      {
+        "protocol": "https",
+        "hostname": "labo-acm.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "media.paulaschoice-eu.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "medicube.us"
+      },
+      {
+        "protocol": "https",
+        "hostname": "mixsoon.us"
+      },
+      {
+        "protocol": "https",
+        "hostname": "purito.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "theordinary.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "us.numbuzin.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.aveneusa.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.axis-y.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.cerave.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.cosrx.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.laroche-posay.sg"
+      },
+      {
+        "protocol": "https",
+        "hostname": "www.skin1004.com"
+      }
+    ]
+  },
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ]
 }
