@@ -42,7 +42,7 @@ const Login = ({ onLogin }) => {
     setBusy(true);
     setError("");
     try {
-      await apiRequest("/api/admin", { method: "POST", body: { password } });
+      await apiRequest("/api/admin", { method: "POST", token: "session", body: { password } });
       setPassword("");
       onLogin(await loadStoreData());
     } catch (err) {
