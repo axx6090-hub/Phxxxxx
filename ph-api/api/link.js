@@ -1,12 +1,15 @@
 // POST /api/link — admin only: reads a product page so the admin can add the
 // product from its link. body { url } -> { final_url, title, description, brand,
-// price, currency, images, image_data, text }
+// price, currency, images, image_data, image_src, image_has_person, text }
+// The photo chosen is the first one that shows the product alone: each candidate
+// is checked by a Groq vision model, and photos with a person or model are skipped.
 // The page is fetched by safeFetch (public addresses only). Its content is data
 // for the admin to review; nothing is saved here.
 import { route, readBody, HttpError } from "../lib/http.js";
 import { requireAdmin } from "../lib/auth.js";
 import { safeFetch, FetchBlocked } from "../lib/safeFetch.js";
 import { extractProductPage } from "../lib/pageMeta.js";
+import { askGroq, groqKey } from "../lib/groq.js";
 
 const MAX_IMAGE_BYTES = 2_500_000; // stays under the 4.5 MB response limit as base64
 const IMAGE_TYPES = /^image\/(jpeg|jpg|png|webp|gif|avif)\b/;
@@ -30,6 +33,66 @@ const fetchImage = async (url) => {
   }
 };
 
+// A Shopify product page lists every gallery photo at <page>.js; the first is
+// usually the packshot. Other shops return nothing here.
+const shopifyImages = async (pageUrl) => {
+  try {
+    const u = new URL(pageUrl);
+    const m = u.pathname.match(/^(.*\/products\/[^/?#]+?)\/?$/);
+    if (!m) return [];
+    const r = await safeFetch(`${u.origin}${m[1]}.js`, { accept: "application/json", maxBytes: 1_500_000, timeoutMs: 8000 });
+    if (r.status !== 200) return [];
+    const p = JSON.parse(r.body.toString("utf8"));
+    return (Array.isArray(p.images) ? p.images : [])
+      .map((i) => (typeof i === "string" ? i : i && i.src) || "")
+      .filter(Boolean)
+      .map((i) => (i.startsWith("//") ? `https:${i}` : i))
+      .slice(0, 8);
+  } catch (e) {
+    return [];
+  }
+};
+
+const PERSON_PROMPT =
+  "Look at this product photo. Does it show a person or any part of a person (face, skin, hand, body, model)? " +
+  "Answer with one word only: yes or no.";
+
+// true / false, or null when it can't be checked (no key, Groq down, format Groq can't read)
+const showsPerson = async (key, dataUrl) => {
+  if (!key || /^data:image\/(avif|gif)/.test(dataUrl)) return null;
+  try {
+    const out = await askGroq(key, dataUrl, PERSON_PROMPT, { maxTokens: 1500, budgetMs: 10000 });
+    const a = out.text.trim().toLowerCase();
+    if (/^(yes|نعم)\b/.test(a)) return true;
+    if (/^(no|لا)\b/.test(a)) return false;
+    return null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Fetches candidates in order and keeps the first that shows no person.
+// Falls back to the first photo it could fetch, flagged when it had a person.
+const pickProductImage = async (candidates) => {
+  const key = groqKey();
+  const started = Date.now();
+  let first = null;
+  let checked = 0;
+  for (const src of candidates.slice(0, 8)) {
+    if (Date.now() - started > 22000) break;
+    const image_data = await fetchImage(src);
+    if (!image_data) continue;
+    if (!first) first = { image_data, image_src: src, image_has_person: false };
+    if (checked >= 5) break;
+    checked++;
+    const person = await showsPerson(key, image_data);
+    if (person === false) return { image_data, image_src: src, image_has_person: false };
+    if (person === null) return first.image_src === src ? first : { image_data, image_src: src, image_has_person: false };
+    if (first.image_src === src) first.image_has_person = true;
+  }
+  return first || { image_data: "", image_src: "", image_has_person: false };
+};
+
 export default route({
   POST: async (req) => {
     await requireAdmin(req);
@@ -49,11 +112,8 @@ export default route({
     if (!/html|xml/.test(page.contentType)) throw new HttpError(400, "الرابط مو صفحة منتج.");
 
     const info = extractProductPage(page.body.toString("utf8"), page.finalUrl);
-    let image_data = "";
-    for (const src of info.images.slice(0, 3)) {
-      image_data = await fetchImage(src);
-      if (image_data) break;
-    }
-    return { final_url: page.finalUrl, ...info, image_data };
+    const candidates = [...new Set([...(await shopifyImages(page.finalUrl)), ...info.images])];
+    const picked = await pickProductImage(candidates);
+    return { final_url: page.finalUrl, ...info, images: candidates.slice(0, 8), ...picked };
   },
 });

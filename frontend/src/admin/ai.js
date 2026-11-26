@@ -318,7 +318,7 @@ export const normalizeLink = (raw) => {
  */
 export const readProductLink = async ({ serverToken, url }) => {
   if (serverToken) {
-    return apiRequest("/api/link", { method: "POST", token: serverToken, body: { url }, timeoutMs: 40000 });
+    return apiRequest("/api/link", { method: "POST", token: serverToken, body: { url }, timeoutMs: 58000 });
   }
   try {
     const res = await fetch(url, { credentials: "omit", referrerPolicy: "no-referrer" });

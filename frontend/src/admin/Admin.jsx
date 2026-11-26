@@ -212,6 +212,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       applyListing(r, newNotes, { fixedPrice: iqd, pageNote });
       if (!r.pageRead) newNotes.push("ما تأكدنا إن الذكاء الاصطناعي فتح الصفحة، يمكن كتب من الرابط بس. راجع الاسم والوصف زين قبل الموافقة.");
 
+      if (imgFile && page && page.image_has_person) newNotes.push("كل صور هذا المنتج بالرابط بيها شخص أو موديل. الأفضل ترفع صورة للمنتج وحده بزر «اختيار صورة».");
       if (imgFile) {
         setFile(imgFile);
         setOriginal(await blobToDataUrl(imgFile));
