@@ -48,8 +48,6 @@ class AdminBoundary extends React.Component {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
-const buildWhatsAppUrl = (text) =>
-  `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - delivery to the other governorates (admin panel)
 const deliverySummary = () => `توصيل اختياري بـ ${formatPrice(DELIVERY_FEE)}`;
 
@@ -867,7 +865,6 @@ const Checkout = () => {
     return { name: saved.name || "", phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
   });
   const [sent, setSent] = useState(false);
-  const [fallbackUrl, setFallbackUrl] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -919,7 +916,6 @@ const Checkout = () => {
     const customer = { name, phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
 
     setSubmitting(true);
-    setFallbackUrl("");
     const payload = { items: items.map((i) => ({ id: i.id, qty: i.qty, price: i.price, name: i.name, free_delivery: i.free_delivery })), customer };
 
     // save the order on the site; one quick retry if the connection drops
@@ -938,20 +934,8 @@ const Checkout = () => {
     }
 
     if (!saved) {
-      // nothing reached us: keep the cart and let the customer try again (WhatsApp only as a manual backup)
-      const lines = [
-        `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
-        `• الاسم: ${name || "غير مذكور"}`,
-        `• الهاتف: ${phone || "غير مذكور"}`,
-        `• التوصيل: ${deliveryLabel}`,
-        `• العنوان: ${form.address.trim() || "غير مذكور"}`,
-        form.notes.trim() ? `• ملاحظات: ${form.notes.trim()}` : null,
-        "",
-        ...items.map((i, idx) => `${idx + 1}) ${i.name} — ${i.qty} × ${formatPrice(i.price)}`),
-        `💰 المبلغ الإجمالي: ${formatPrice(totalPrice + deliveryFee)}`,
-      ].filter((l) => l !== null).join("\n");
-      setFallbackUrl(buildWhatsAppUrl(lines));
-      setSubmitError("ما وصل الطلب بسبب الانترنت. تأكدي من الاتصال ودوسي «تأكيد الطلب» مرة ثانية.");
+      // nothing reached us: keep the cart and let the customer press «تأكيد الطلب» again
+      setSubmitError("ما وصل الطلب، يمكن الانترنت ضعيف. سلتج محفوظة، تأكدي من الاتصال ودوسي «تأكيد الطلب» مرة ثانية.");
       setSubmitting(false);
       return;
     }
@@ -1085,7 +1069,6 @@ const Checkout = () => {
           </div>
 
           {submitError && submitError !== ADDRESS_ERROR && submitError !== NAME_ERROR && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
-          {fallbackUrl && submitError && <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="block text-center text-sm font-semibold text-green-700 underline" data-testid="checkout-whatsapp-fallback">أو ارسلي الطلب على واتساب</a>}
           <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
