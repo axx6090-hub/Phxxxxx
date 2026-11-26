@@ -1,0 +1,432 @@
+{
+ "vaseline": {
+  "name": "Vaseline",
+  "sites": [
+   {
+    "site": "https://www.vaseline.co.uk",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   },
+   {
+    "site": "https://www.vaseline.com/in/en/home.html",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Vaseline_new_logo.png/960px-Vaseline_new_logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Vaseline new logo.png",
+    "score": 5,
+    "bytes": 474282
+   },
+   {
+    "file": "02.png",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Vaseline_Logo.svg/960px-Vaseline_Logo.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Vaseline Logo.svg",
+    "score": 5,
+    "bytes": 125900
+   },
+   {
+    "file": "03.png",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/Vaseline_newspaper_ad_1922.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "src": "commons:File:Vaseline newspaper ad 1922.png",
+    "score": 5,
+    "bytes": 23727
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Snohomish_-_Blackman_House_Museum_-_Vaseline_Camphor_Ice.jpg/960px-Snohomish_-_Blackman_House_Museum_-_Vaseline_Camphor_Ice.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Snohomish - Blackman House Museum - Vaseline Camphor Ice.jpg",
+    "score": 5,
+    "bytes": 298791
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Vaseline_-_TWCMS-G12142_%2816692709641%29.jpg/960px-Vaseline_-_TWCMS-G12142_%2816692709641%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Vaseline - TWCMS-G12142 (16692709641).jpg",
+    "score": 5,
+    "bytes": 76841
+   }
+  ]
+ },
+ "la-roche-posay": {
+  "name": "La Roche-Posay",
+  "sites": [
+   {
+    "site": "https://www.laroche-posay.co.uk",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   },
+   {
+    "site": "https://www.laroche-posay.com",
+    "final": "https://www.laroche-posay.com",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/La_Roche-Posay_%28orangebrand%29.svg/960px-La_Roche-Posay_%28orangebrand%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:La Roche-Posay (orangebrand).svg",
+    "score": 5,
+    "bytes": 110340
+   },
+   {
+    "file": "02.png",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/La_Roche-Posay_%28brand%29.svg/960px-La_Roche-Posay_%28brand%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:La Roche-Posay (brand).svg",
+    "score": 5,
+    "bytes": 41074
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Social_Media_and_Brand_Loreal_Strategy_with_AI_at_VivaTech_2024.jpg/960px-Social_Media_and_Brand_Loreal_Strategy_with_AI_at_VivaTech_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Social Media and Brand Loreal Strategy with AI at VivaTech 2024.jpg",
+    "score": 5,
+    "bytes": 104534
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Ser_medico_o_exercicio_de_se_colocar_no_lugar_do_outro%2C_Hist%C3%B3ria_no_Museu_da_Pessoa_%28145895%29.pdf/page1-960px-Ser_medico_o_exercicio_de_se_colocar_no_lugar_do_outro%2C_Hist%C3%B3ria_no_Museu_da_Pessoa_%28145895%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Ser medico o exercicio de se colocar no lugar do outro, Hist\u00f3ria no Museu da Pessoa (145895).pdf",
+    "score": 5,
+    "bytes": 170885
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/OJ_C_175_of_2022_-_EN_English.pdf/page1-960px-OJ_C_175_of_2022_-_EN_English.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:OJ C 175 of 2022 - EN English.pdf",
+    "score": 5,
+    "bytes": 138498
+   }
+  ]
+ },
+ "avene": {
+  "name": "Av\u00e8ne",
+  "sites": [
+   {
+    "site": "https://www.avene.co.uk",
+    "final": "https://www.avene.co.uk",
+    "ok": true
+   },
+   {
+    "site": "https://www.aveneusa.com",
+    "ok": false,
+    "error": "HTTP Error 403: Forbidden"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://www.avene.co.uk/var/dfp/storage/images/7/0/8/3/4403807-55-eng-GB/61a73cc1ec82-22_av_logo_lc-png-png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 15,
+    "bytes": 20953
+   },
+   {
+    "file": "02.jpg",
+    "url": "https://www.avene.co.uk/var/dfp/storage/images/_aliases/social_network_image/7/0/8/3/4403807-55-eng-GB/61a73cc1ec82-22_av_logo_lc-png-png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 3,
+    "bytes": 110774
+   },
+   {
+    "file": "03.png",
+    "url": "https://www.avene.co.uk/assets/themes/new_avene/images/apple-touch-icon.png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 2,
+    "bytes": 9205
+   },
+   {
+    "file": "04.png",
+    "url": "https://www.avene.co.uk/assets/themes/new_avene/images/apple-touch-icon-precomposed.png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 2,
+    "bytes": 9205
+   },
+   {
+    "file": "05.png",
+    "url": "https://www.avene.co.uk/assets/themes/new_avene/images/apple-touch-icon-120x120.png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 2,
+    "bytes": 9205
+   },
+   {
+    "file": "06.png",
+    "url": "https://www.avene.co.uk/assets/themes/new_avene/images/apple-touch-icon-120x120-precomposed.png",
+    "src": "site:https://www.avene.co.uk",
+    "score": 2,
+    "bytes": 9205
+   },
+   {
+    "file": "07.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Logo_avene.jpg/960px-Logo_avene.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Logo avene.jpg",
+    "score": 5,
+    "bytes": 60608
+   },
+   {
+    "file": "08.png",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Av_new-logo-2022_eau-thermale-avene.png/960px-Av_new-logo-2022_eau-thermale-avene.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Av new-logo-2022 eau-thermale-avene.png",
+    "score": 5,
+    "bytes": 83172
+   }
+  ]
+ },
+ "dr-althea": {
+  "name": "Dr.Althea",
+  "sites": [
+   {
+    "site": "https://www.dralthea.com",
+    "ok": false,
+    "error": "<urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1011)>"
+   },
+   {
+    "site": "https://dralthea.co.kr",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Aviso_ao_publico_ou_Resumo_das_verdades_mais_interessantes_que_elle_deve_conhecer_%C3%A1cerca_da_epidemia_que_actualmente_grassa_em_Portugal_%28IA_avisoaopublicoou00gusm%29.pdf/page1-960px-thumbnail.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Aviso ao publico ou Resumo das verdades mais interessantes que elle deve conhecer \u00e1cerca da epidemia que actualmente grassa em Portugal (IA avisoaopublicoou00gusm).pdf",
+    "score": 5,
+    "bytes": 172839
+   },
+   {
+    "file": "02.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Codigo_pharmaceutico_lusitano%2C_ou_tratado_de_pharmaconomia_..._%28IA_b29308380%29.pdf/page1-960px-Codigo_pharmaceutico_lusitano%2C_ou_tratado_de_pharmaconomia_..._%28IA_b29308380%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Codigo pharmaceutico lusitano, ou tratado de pharmaconomia ... (IA b29308380).pdf",
+    "score": 5,
+    "bytes": 310093
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Processo_crime_de_defloramento%2C_Centro_de_Mem%C3%B3ria_Unicamp_%28BR_SPCMU_TJ-1-6-3906%29.pdf/page1-960px-Processo_crime_de_defloramento%2C_Centro_de_Mem%C3%B3ria_Unicamp_%28BR_SPCMU_TJ-1-6-3906%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Processo crime de defloramento, Centro de Mem\u00f3ria Unicamp (BR SPCMU TJ-1-6-3906).pdf",
+    "score": 5,
+    "bytes": 215646
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Jornal_das_Fam%C3%ADlias_1875_n09.pdf/page1-960px-Jornal_das_Fam%C3%ADlias_1875_n09.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Jornal das Fam\u00edlias 1875 n09.pdf",
+    "score": 5,
+    "bytes": 317977
+   },
+   {
+    "file": "05.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Jornal_das_Fam%C3%ADlias_1866_n01.pdf/page1-960px-Jornal_das_Fam%C3%ADlias_1866_n01.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Jornal das Fam\u00edlias 1866 n01.pdf",
+    "score": 5,
+    "bytes": 221643
+   }
+  ]
+ },
+ "dr-melaxin": {
+  "name": "Dr.Melaxin",
+  "sites": [
+   {
+    "site": "https://drmelaxin.com/en",
+    "final": "https://drmelaxin.com/en",
+    "ok": true
+   },
+   {
+    "site": "https://drmelaxin.co.kr",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": []
+ },
+ "eqqualberry": {
+  "name": "EqqualBerry",
+  "sites": [
+   {
+    "site": "https://eqqualberry.com/index.html",
+    "final": "https://eqqualberry.com/index.html",
+    "ok": true
+   },
+   {
+    "site": "https://eqqualberry.us",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.png",
+    "url": "https://eqqualberry.cafe24.com/setting/SEO/SEO_2611.png",
+    "src": "site:https://eqqualberry.com/index.html",
+    "score": 3,
+    "bytes": 890763
+   },
+   {
+    "file": "02.ico",
+    "url": "https://eqqualberry.com/web/upload/favicon-4d68abb52d77d0a56dfe86d1e3047f50.ico",
+    "src": "site:https://eqqualberry.com/index.html",
+    "score": 1,
+    "bytes": 1784
+   }
+  ]
+ },
+ "mavala": {
+  "name": "Mavala",
+  "sites": [
+   {
+    "site": "https://www.mavala.fr",
+    "final": "https://www.mavala.fr",
+    "ok": true
+   },
+   {
+    "site": "https://www.mavala.co.uk",
+    "final": "https://mavala.co.uk/",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://cdn.shopify.com/s/files/1/0706/1992/2652/files/Logo_-logo.jpg?v=1738315948",
+    "src": "site:https://www.mavala.fr",
+    "score": 8,
+    "bytes": 8756
+   },
+   {
+    "file": "02.svg",
+    "url": "https://www.mavala.fr/icons/favicon.svg",
+    "src": "site:https://www.mavala.fr",
+    "score": 1,
+    "bytes": 379
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://cdn.sanity.io/images/tlwxxl56/production/a8de303620da6ebf583559fb30f392e38060441b-752x848.jpg?rect=0,227,752,395&w=1200&h=630&fm=jpg&fit=crop",
+    "src": "site:https://mavala.co.uk/",
+    "score": 3,
+    "bytes": 119173
+   },
+   {
+    "file": "04.svg",
+    "url": "https://mavala.co.uk/icons/favicon.svg",
+    "src": "site:https://mavala.co.uk/",
+    "score": 1,
+    "bytes": 379
+   },
+   {
+    "file": "05.png",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/4/40/Mavala_Switzerland_logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "src": "commons:File:Mavala Switzerland logo.png",
+    "score": 5,
+    "bytes": 25804
+   },
+   {
+    "file": "06.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Il_Friuli_giornale_politico-amministrativo-letterario-commerciale_n._7_%281904%29_%28IA_IlFriuli_7-1904%29.pdf/page1-960px-Il_Friuli_giornale_politico-amministrativo-letterario-commerciale_n._7_%281904%29_%28IA_IlFriuli_7-1904%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Il Friuli giornale politico-amministrativo-letterario-commerciale n. 7 (1904) (IA IlFriuli 7-1904).pdf",
+    "score": 5,
+    "bytes": 715754
+   },
+   {
+    "file": "07.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Il_Nuovo_Friuli_-_organo_Partito_progressista_181_%281877%29_%28IA_IlNuovoFriuli-181-1877%29.pdf/page1-960px-Il_Nuovo_Friuli_-_organo_Partito_progressista_181_%281877%29_%28IA_IlNuovoFriuli-181-1877%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Il Nuovo Friuli - organo Partito progressista 181 (1877) (IA IlNuovoFriuli-181-1877).pdf",
+    "score": 5,
+    "bytes": 718181
+   }
+  ]
+ },
+ "revuele": {
+  "name": "Revuele",
+  "sites": [
+   {
+    "site": "https://revuele.com",
+    "final": "https://revuele.com",
+    "ok": true
+   },
+   {
+    "site": "https://revuele.co.uk",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": []
+ },
+ "acm": {
+  "name": "ACM",
+  "sites": [
+   {
+    "site": "https://www.laboratoire-acm.com",
+    "ok": false,
+    "error": "<urlopen error [Errno 104] Connection reset by peer>"
+   },
+   {
+    "site": "https://www.laboratoire-acm.fr",
+    "ok": false,
+    "error": "<urlopen error [Errno -2] Name or service not known>"
+   }
+  ],
+  "files": [
+   {
+    "file": "01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/National_Voluntary_Laboratory_Accreditation_Program_1993_directory_%28IA_nationalvoluntar810whit_0%29.pdf/page1-960px-National_Voluntary_Laboratory_Accreditation_Program_1993_directory_%28IA_nationalvoluntar810whit_0%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:National Voluntary Laboratory Accreditation Program 1993 directory (IA nationalvoluntar810whit 0).pdf",
+    "score": 5,
+    "bytes": 113405
+   },
+   {
+    "file": "02.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/National_Voluntary_Laboratory_Accreditation_Program_1992_directory_%28IA_nationalvoluntar810whit%29.pdf/page1-960px-National_Voluntary_Laboratory_Accreditation_Program_1992_directory_%28IA_nationalvoluntar810whit%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:National Voluntary Laboratory Accreditation Program 1992 directory (IA nationalvoluntar810whit).pdf",
+    "score": 5,
+    "bytes": 107208
+   },
+   {
+    "file": "03.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Le_Moniteur_universel_%28IA_lemoniteuruniver179918142pari%29.pdf/page1-500px-Le_Moniteur_universel_%28IA_lemoniteuruniver179918142pari%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:Le Moniteur universel (IA lemoniteuruniver179918142pari).pdf",
+    "score": 5,
+    "bytes": 78002
+   },
+   {
+    "file": "04.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/National_Voluntary_Laboratory_Accreditation_Program_1996_directory_%28IA_nationalvoluntar810whit_3%29.pdf/page1-960px-National_Voluntary_Laboratory_Accreditation_Program_1996_directory_%28IA_nationalvoluntar810whit_3%29.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "src": "commons:File:National Voluntary Laboratory Accreditation Program 1996 directory (IA nationalvoluntar810whit 3).pdf",
+    "score": 5,
+    "bytes": 144345
+   }
+  ]
+ },
+ "qv": {
+  "name": "QV",
+  "sites": [
+   {
+    "site": "https://www.qvskincare.com/qv-uk.html",
+    "ok": false,
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "site": "https://www.egopharm.com/global.html",
+    "final": "https://www.egopharm.com/global.html",
+    "ok": true
+   }
+  ],
+  "files": [
+   {
+    "url": "http://www.egopharm.com/global.thumb.800.480.png?ck=1792715282",
+    "src": "site:https://www.egopharm.com/global.html",
+    "error": "HTTP Error 404: Not Found"
+   },
+   {
+    "url": "https://www.egopharm.com/content/egopharm/global.thumb.800.480.png?ck=1792715282",
+    "src": "site:https://www.egopharm.com/global.html",
+    "error": "HTTP Error 404: Not Found"
+   }
+  ]
+ }
+}
