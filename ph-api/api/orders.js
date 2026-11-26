@@ -11,7 +11,7 @@ import { notifyNewOrder } from "../lib/notify.js";
 import { sendOrderToStaff, remindUnprepared } from "../lib/whatsapp.js";
 
 const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
-const ADMIN_URL = process.env.ADMIN_URL || "https://balyiq.site/#/admin";
+const ADMIN_URL = process.env.ADMIN_URL || "https://admin.balyiq.site/";
 export const STATUSES = ["new", "confirmed", "shipped", "delivered", "cancelled"];
 
 const clean = (v, max) => String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);

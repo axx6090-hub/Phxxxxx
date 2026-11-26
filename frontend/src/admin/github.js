@@ -1,5 +1,5 @@
 // GitHub is the "database" of the store: the admin panel reads and commits
-// frontend/src/staticData.json and product images, then GitHub Actions redeploys the site.
+// frontend/src/staticData.json and product images (through the store server), then the site redeploys.
 export const REPO_OWNER = "axx6090-hub";
 export const REPO_NAME = "Phxxxxx";
 export const REPO_BRANCH = "main";
@@ -7,17 +7,10 @@ export const DATA_PATH = "frontend/src/staticData.json";
 export const IMAGES_DIR = "frontend/public/images/products";
 export const BANNERS_DIR = "frontend/public/images/banners";
 
-const API = "https://api.github.com";
+import { apiRequest } from "../ordersApi";
 
-const headers = (token) => ({
-  Authorization: `Bearer ${token}`,
-  Accept: "application/vnd.github+json",
-  "X-GitHub-Api-Version": "2022-11-28",
-});
-
-const contentsUrl = (path) =>
-  `${API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
-
+// The panel never holds a GitHub token: the store server (/api/repo) reads and writes these
+// files with its own token, and only after the admin password session cookie is checked.
 export class GitHubError extends Error {
   constructor(status, message) {
     super(message);
@@ -25,23 +18,12 @@ export class GitHubError extends Error {
   }
 }
 
-const explain = (status) => {
-  if (status === 401) return "رمز GitHub غير صحيح أو منتهي الصلاحية.";
-  if (status === 403) return "الرمز ما عنده صلاحية الكتابة على المستودع (لازم Contents: Read and write).";
-  if (status === 404) return "المستودع أو الملف غير موجود، أو الرمز ما يشوف هذا المستودع.";
-  if (status === 409 || status === 422) return "البيانات تغيّرت على GitHub. حدّث الصفحة وأعد المحاولة.";
-  return `خطأ من GitHub (${status}).`;
-};
-
-const request = async (url, options) => {
-  let res;
+const call = async (path, options) => {
   try {
-    res = await fetch(url, options);
+    return await apiRequest(path, { token: "session", timeoutMs: 60000, ...options });
   } catch (e) {
-    throw new GitHubError(0, "تعذّر الاتصال بـ GitHub. تأكد من الإنترنت.");
+    throw new GitHubError(e.status || 0, e.message);
   }
-  if (!res.ok) throw new GitHubError(res.status, explain(res.status));
-  return res.json();
 };
 
 // ---- base64 helpers that are safe for Arabic (UTF-8) text ----
@@ -62,14 +44,14 @@ export const base64ToUtf8 = (b64) => {
 };
 
 /** Reads the store data straight from the repository (always the latest version). */
-export const loadStoreData = async (token) => {
-  const file = await request(`${contentsUrl(DATA_PATH)}?ref=${REPO_BRANCH}`, { headers: headers(token), cache: "no-store" });
+export const loadStoreData = async () => {
+  const file = await call(`/api/repo?path=${encodeURIComponent(DATA_PATH)}`);
   return { data: JSON.parse(base64ToUtf8(file.content)), sha: file.sha };
 };
 
 const getSha = async (token, path) => {
   try {
-    const file = await request(`${contentsUrl(path)}?ref=${REPO_BRANCH}`, { headers: headers(token), cache: "no-store" });
+    const file = await call(`/api/repo?meta=1&path=${encodeURIComponent(path)}`);
     return file.sha;
   } catch (e) {
     if (e.status === 404) return undefined;
@@ -77,12 +59,10 @@ const getSha = async (token, path) => {
   }
 };
 
-const putFile = (token, path, base64Content, message, sha) =>
-  request(contentsUrl(path), {
-    method: "PUT",
-    headers: { ...headers(token), "Content-Type": "application/json" },
-    body: JSON.stringify({ message, content: base64Content, branch: REPO_BRANCH, ...(sha ? { sha } : {}) }),
-  });
+const putFile = async (token, path, base64Content, message, sha) => {
+  const out = await call("/api/repo", { method: "PUT", body: { path, content: base64Content, message, ...(sha ? { sha } : {}) } });
+  return { content: { sha: out.sha } };
+};
 
 /**
  * Publishes a draft: uploads new product images first, then the data file.
@@ -90,7 +70,7 @@ const putFile = (token, path, base64Content, message, sha) =>
  */
 export const publishStore = async (token, { data, loadedSha, images, bannerImages, onStep }) => {
   const currentSha = await getSha(token, DATA_PATH);
-  if (loadedSha && currentSha && currentSha !== loadedSha) throw new GitHubError(409, explain(409));
+  if (loadedSha && currentSha && currentSha !== loadedSha) throw new GitHubError(409, "البيانات تغيّرت على GitHub. حدّث الصفحة وأعد المحاولة.");
 
   const finalData = JSON.parse(JSON.stringify(data));
   const ids = Object.keys(images || {});

@@ -17,8 +17,9 @@ export const apiRequest = async (path, { method = "GET", body, token, timeoutMs 
       method,
       headers: {
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      // admin calls carry the HttpOnly session cookie; the public store sends none
+      credentials: token ? "include" : "omit",
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: controller ? controller.signal : undefined,
       cache: "no-store",

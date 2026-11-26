@@ -1311,7 +1311,27 @@ const CookieConsent = () => {
 };
 
 // ============== APP ==============
+// The admin panel is its own build (REACT_APP_ADMIN=1, served at admin.balyiq.site); the
+// public store has no admin page at all. Access is checked by the server with a password.
+const IS_ADMIN_BUILD = process.env.REACT_APP_ADMIN === "1";
+
+const AdminApp = () => {
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    document.title = "لوحة الأدمن | صيدلية أيمن";
+  }, []);
+  return (
+    <div dir="rtl" className="min-h-screen bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+      <AdminBoundary><Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense></AdminBoundary>
+    </div>
+  );
+};
+
 function App() {
+  if (IS_ADMIN_BUILD) return <HashRouter><AdminApp /></HashRouter>;
   return (
     <CartProvider>
       <HashRouter>
@@ -1327,7 +1347,7 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<AdminBoundary><Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense></AdminBoundary>} />
+              <Route path="*" element={<Home />} />
             </Routes>
           </main>
           <Footer />

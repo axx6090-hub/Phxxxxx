@@ -7,7 +7,7 @@ import { readJson, writeJson } from "../lib/store.js";
 import { requireAdmin } from "../lib/auth.js";
 import { SUBS_PATH, sendPush } from "../lib/notify.js";
 
-const ADMIN_URL = process.env.ADMIN_URL || "https://balyiq.site/#/admin";
+const ADMIN_URL = process.env.ADMIN_URL || "https://admin.balyiq.site/";
 
 const validSub = (s) =>
   s && typeof s.endpoint === "string" && /^https:\/\//.test(s.endpoint) && s.endpoint.length < 1000 &&

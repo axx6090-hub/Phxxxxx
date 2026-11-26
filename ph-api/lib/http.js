@@ -1,5 +1,5 @@
 // Small HTTP helpers shared by every endpoint.
-const DEFAULT_ORIGINS = ["https://balyiq.site", "https://www.balyiq.site"];
+const DEFAULT_ORIGINS = ["https://balyiq.site", "https://www.balyiq.site", "https://admin.balyiq.site"];
 
 const allowedOrigins = () =>
   (process.env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(","))
@@ -19,6 +19,7 @@ export const cors = (req, res) => {
   if (origin && allowedOrigins().includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Max-Age", "86400");

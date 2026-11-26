@@ -1,16 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { Plus, Trash2, Sparkles, X, Search, Link2 } from "lucide-react";
-import { loadStoreData, publishStore, REPO_OWNER, REPO_NAME } from "./github";
+import { loadStoreData, publishStore } from "./github";
+import { apiRequest } from "../ordersApi";
 import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageToFile, normalizeLink, blobToDataUrl, dataUrlToBase64, makeWhiteBackground, resizeForAnalysis, serverAiAvailable } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
 
-const TOKEN_KEY = "admin_gh_token";
 const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
 const AI_MODEL_KEY = "admin_ai_model";
-const TOKEN_HELP_URL = "https://github.com/settings/personal-access-tokens/new";
 
 const store = {
   get: (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } },
@@ -32,8 +30,10 @@ const btnPrimary = "bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white
 const btnGhost = "border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold px-4 py-2 rounded-full transition";
 
 // ============== LOGIN ==============
+// The password is checked on the server, which then keeps this device signed in with an
+// HttpOnly cookie. The password itself lives only in Vercel (ADMIN_PASSWORD).
 const Login = ({ onLogin }) => {
-  const [token, setToken] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,9 +42,9 @@ const Login = ({ onLogin }) => {
     setBusy(true);
     setError("");
     try {
-      const loaded = await loadStoreData(token.trim());
-      store.set(TOKEN_KEY, token.trim());
-      onLogin(token.trim(), loaded);
+      await apiRequest("/api/admin", { method: "POST", body: { password } });
+      setPassword("");
+      onLogin(await loadStoreData());
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,30 +53,15 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-12" data-testid="admin-login">
+    <div className="max-w-md mx-auto px-4 py-16" data-testid="admin-login">
       <div className="bg-white border border-pink-100 rounded-3xl p-6 sm:p-8 shadow-sm">
         <h1 className="text-2xl font-extrabold text-gray-900 mb-2">لوحة الأدمن 🔐</h1>
-        <p className="text-gray-600 text-sm leading-relaxed mb-5">
-          اللوحة تحفظ المنتجات مباشرة في مستودع المتجر على GitHub ({REPO_OWNER}/{REPO_NAME})، لذلك الدخول يكون برمز GitHub خاص بك.
-          الرمز ينحفظ بمتصفحك فقط وما ينرسل لأي مكان غير GitHub وسيرفر المتجر نفسه.
-        </p>
+        <p className="text-gray-600 text-sm leading-relaxed mb-5">اكتب كلمة سر الأدمن حتى تدخل.</p>
         <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">رمز GitHub (Personal access token)</label>
-            <input type="password" required value={token} onChange={(e) => setToken(e.target.value)} placeholder="github_pat_..." dir="ltr" autoComplete="off" className={inputCls} data-testid="admin-token" />
-          </div>
+          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة السر" autoComplete="current-password" className={inputCls} data-testid="admin-password" />
           {error && <p className="text-red-600 text-sm" data-testid="admin-login-error">{error}</p>}
-          <button type="submit" disabled={busy || !token.trim()} className={`${btnPrimary} w-full`} data-testid="admin-login-btn">{busy ? "جاري التحقق..." : "دخول"}</button>
+          <button type="submit" disabled={busy || !password} className={`${btnPrimary} w-full`} data-testid="admin-login-btn">{busy ? "جاري التحقق..." : "دخول"}</button>
         </form>
-        <details className="mt-6 text-sm text-gray-600">
-          <summary className="cursor-pointer font-semibold text-pink-600">شلون أسوي الرمز؟ (مرة وحدة)</summary>
-          <ol className="list-decimal pr-5 mt-3 space-y-1.5 leading-relaxed">
-            <li>افتح <a href={TOKEN_HELP_URL} target="_blank" rel="noopener noreferrer" className="text-pink-600 underline">صفحة إنشاء الرمز في GitHub</a>.</li>
-            <li>Repository access ← اختر <b>Only select repositories</b> ← <b>{REPO_NAME}</b>.</li>
-            <li>Permissions ← Repository permissions ← <b>Contents: Read and write</b>.</li>
-            <li>اضغط Generate token وانسخ الرمز والصقه هنا.</li>
-          </ol>
-        </details>
       </div>
     </div>
   );
@@ -502,7 +487,7 @@ const Panel = ({ token, initial, onLogout }) => {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h1 className="text-2xl font-extrabold text-gray-900">لوحة الأدمن</h1>
         <div className="flex items-center gap-2">
-          <Link to="/" className={btnGhost}>عرض المتجر</Link>
+          <a href="https://balyiq.site/" target="_blank" rel="noopener noreferrer" className={btnGhost}>عرض المتجر</a>
           <button onClick={onLogout} className={btnGhost} data-testid="admin-logout">خروج</button>
         </div>
       </div>
@@ -642,8 +627,8 @@ const Panel = ({ token, initial, onLogout }) => {
           </div>
           <div className="border-t border-pink-100 pt-5">
             <h2 className="text-lg font-bold text-gray-900 mb-1">الحساب</h2>
-            <p className="text-sm text-gray-600 mb-3">الخروج يمسح رمز GitHub من هذا المتصفح.</p>
-            <button onClick={onLogout} className={btnGhost}>خروج ومسح الرمز</button>
+            <p className="text-sm text-gray-600 mb-3">الخروج يطلع هذا الجهاز من اللوحة. تغيير كلمة السر بـ Vercel يطلّع كل الأجهزة.</p>
+            <button onClick={onLogout} className={btnGhost}>خروج</button>
           </div>
         </div>
       )}
@@ -652,22 +637,27 @@ const Panel = ({ token, initial, onLogout }) => {
 };
 
 // ============== ENTRY ==============
+const SESSION = "session"; // admin API calls carry the session cookie
+
 export default function Admin() {
-  const [session, setSession] = useState(null); // { token, loaded }
-  const [checking, setChecking] = useState(() => !!store.get(TOKEN_KEY));
+  const [loaded, setLoaded] = useState(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const saved = store.get(TOKEN_KEY);
-    if (!saved) return;
-    loadStoreData(saved)
-      .then((loaded) => setSession({ token: saved, loaded }))
-      .catch(() => store.set(TOKEN_KEY, ""))
+    store.set("admin_gh_token", ""); // older panel kept a GitHub token here
+    apiRequest("/api/admin", { token: SESSION })
+      .then((s) => (s.loggedIn ? loadStoreData().then(setLoaded) : null))
+      .catch(() => {})
       .finally(() => setChecking(false));
   }, []);
 
-  const logout = () => { store.set(TOKEN_KEY, ""); store.set(AI_KEY, ""); setSession(null); };
+  const logout = async () => {
+    try { await apiRequest("/api/admin", { method: "DELETE", token: SESSION }); } catch (e) { /* ignore */ }
+    store.set(AI_KEY, "");
+    setLoaded(null);
+  };
 
   if (checking) return <div className="py-20 text-center text-gray-500">جاري التحميل...</div>;
-  if (!session) return <Login onLogin={(token, loaded) => setSession({ token, loaded })} />;
-  return <Panel token={session.token} initial={session.loaded} onLogout={logout} />;
+  if (!loaded) return <Login onLogin={setLoaded} />;
+  return <Panel token={SESSION} initial={loaded} onLogout={logout} />;
 }
