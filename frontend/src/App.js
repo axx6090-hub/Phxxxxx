@@ -1280,13 +1280,20 @@ const CookieConsent = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[60] p-3 sm:p-4" role="dialog" aria-live="polite" aria-label="ملفات تعريف الارتباط" data-testid="cookie-consent">
-      <div className="max-w-3xl mx-auto bg-white border border-pink-100 shadow-2xl rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-        <div className="flex-1 text-sm text-gray-700 leading-relaxed">
-          <p className="font-bold text-gray-900 mb-1">🍪 نستخدم ملفات تعريف الارتباط (الكوكيز)</p>
-          <p>حتى نحفظ سلتج وبيانات التوصيل للطلب الجاي ونعرض لج المنتجات اللي شفتيها، ونحسّن تجربتج بالموقع. <Link to="/privacy-policy" className="text-pink-600 underline underline-offset-2">سياسة الخصوصية</Link></p>
-        </div>
-        <button onClick={accept} className="shrink-0 w-full sm:w-auto bg-pink-600 hover:bg-pink-700 text-white font-bold px-8 py-2.5 rounded-full transition" data-testid="cookie-accept">موافق</button>
+    <div
+      className="fixed inset-x-3 sm:inset-x-0 sm:mx-auto sm:max-w-md z-[45]"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
+      role="dialog"
+      aria-live="polite"
+      aria-label="ملفات تعريف الارتباط"
+      data-testid="cookie-consent"
+    >
+      <div className="bg-white border border-pink-100 shadow-lg rounded-2xl px-3 py-2.5 flex items-center gap-3">
+        <p className="flex-1 text-xs text-gray-700 leading-relaxed">
+          🍪 نستخدم الكوكيز حتى نحفظ سلتج ونحسّن تجربتج. اضغطي «موافق» للموافقة على الكوكيز و{" "}
+          <Link to="/privacy-policy" className="text-pink-600 font-semibold underline underline-offset-2" data-testid="cookie-privacy-link">سياسة الخصوصية</Link>
+        </p>
+        <button onClick={accept} className="shrink-0 bg-pink-600 hover:bg-pink-700 text-white text-sm font-bold px-5 py-2 rounded-full transition" data-testid="cookie-accept">موافق</button>
       </div>
     </div>
   );
