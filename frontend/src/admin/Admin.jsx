@@ -459,6 +459,18 @@ const Panel = ({ token, initial, onLogout }) => {
     setImages((m) => { const rest = { ...m }; delete rest[p.id]; return rest; });
   });
 
+  // delete every product at once: first press opens the panel, «تم» deletes; nothing reaches customers until «نشر التغييرات»
+  const [confirmAll, setConfirmAll] = useState(false);
+  const deleteAllProducts = () => {
+    change((d) => { d.products = []; return d; });
+    setImages({});
+    setPreviews({});
+    setEditingId(null);
+    setQuery("");
+    setFilter("");
+    setConfirmAll(false);
+  };
+
   const addCategory = (e) => {
     e.preventDefault();
     const name = newCat.name.trim();
@@ -565,7 +577,22 @@ const Panel = ({ token, initial, onLogout }) => {
               {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <p className="text-sm text-gray-500 mb-3">{visible.length} منتج</p>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="text-sm text-gray-500">{visible.length} منتج</p>
+            {data.products.length > 0 && !confirmAll && (
+              <button onClick={() => setConfirmAll(true)} className="text-xs font-bold text-red-600 border border-red-200 bg-white hover:bg-red-50 px-3 py-1.5 rounded-full" data-testid="admin-delete-all">حذف كل المنتجات</button>
+            )}
+          </div>
+          {confirmAll && (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4" data-testid="admin-delete-all-confirm">
+              <p className="text-sm font-bold text-red-700">راح تنحذف كل المنتجات ({data.products.length}) من اللوحة.</p>
+              <p className="text-xs text-red-600 mt-1">ما تنحذف من المتجر إلا لما تدوس «نشر التغييرات». وإذا غيّرت رأيك قبل النشر، سوّي تحديث للصفحة وترجع مثل ما كانت.</p>
+              <div className="flex gap-2 mt-3">
+                <button onClick={deleteAllProducts} className="bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-5 py-2 rounded-full" data-testid="admin-delete-all-yes">تم</button>
+                <button onClick={() => setConfirmAll(false)} className="bg-white border border-gray-200 text-gray-700 text-sm font-bold px-5 py-2 rounded-full" data-testid="admin-delete-all-no">إلغاء</button>
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             {visible.map((p) => (
               <div key={p.id} className="flex items-center gap-3 bg-white border border-pink-100 rounded-2xl p-3" data-testid={`admin-row-${p.id}`}>
