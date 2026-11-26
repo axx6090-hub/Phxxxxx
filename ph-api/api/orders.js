@@ -46,6 +46,14 @@ const rateLimit = (ip) => {
   recent.set(ip, hits);
 };
 
+// Vercel keeps the function running for a promise handed to waitUntil
+// (the same hook @vercel/functions uses); elsewhere we simply wait for it.
+const runAfterResponse = (promise) => {
+  const ctx = globalThis[Symbol.for("@vercel/request-context")]?.get?.();
+  if (ctx && typeof ctx.waitUntil === "function") { ctx.waitUntil(promise); return true; }
+  return false;
+};
+
 const createOrder = async (req) => {
   rateLimit(clientIp(req));
   const body = readBody(req);
@@ -110,21 +118,26 @@ const createOrder = async (req) => {
   };
   await writeJson(order.key, order);
 
-  let notified = null;
-  let staff = null;
-  try {
-    [notified, staff] = await Promise.all([
-      notifyNewOrder(order, ADMIN_URL),
-      sendOrderToStaff(order).catch((e) => ({ sent: 0, reason: e.message })),
-    ]);
-  } catch (e) {
-    console.error("notify failed", e);
-  }
-  if (staff?.sent) order.prep = { state: "waiting", sentTo: staff.sent };
-  if (notified || staff?.sent) {
-    order.notified = { push: notified?.push?.sent || 0, whatsapp: !!notified?.whatsapp?.sent, staff: staff?.sent || 0 };
-    await writeJson(order.key, order).catch(() => {});
-  }
+  // tell the admin and staff after answering the customer, so «تأكيد الطلب» returns fast
+  const notifyAll = async () => {
+    let notified = null;
+    let staff = null;
+    try {
+      [notified, staff] = await Promise.all([
+        notifyNewOrder(order, ADMIN_URL),
+        sendOrderToStaff(order).catch((e) => ({ sent: 0, reason: e.message })),
+      ]);
+    } catch (e) {
+      console.error("notify failed", e);
+    }
+    if (staff?.sent) order.prep = { state: "waiting", sentTo: staff.sent };
+    if (notified || staff?.sent) {
+      order.notified = { push: notified?.push?.sent || 0, whatsapp: !!notified?.whatsapp?.sent, staff: staff?.sent || 0 };
+      await writeJson(order.key, order).catch(() => {});
+    }
+  };
+  const job = notifyAll();
+  if (!runAfterResponse(job)) await job;
   return { ok: true, id: order.id, items: order.items, subtotal, deliveryFee, total: order.total };
 };
 

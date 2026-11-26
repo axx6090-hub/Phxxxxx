@@ -8,6 +8,7 @@ import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
 import { optimized, fallbackTo } from "./lib/img";
+import { firePetals } from "./lib/confetti";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
 // exists. In that case reload once from the server instead of showing a blank page.
@@ -49,18 +50,6 @@ const API = `${BACKEND_URL}/api`;
 const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
 const buildWhatsAppUrl = (text) =>
   `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
-// Opens an empty tab synchronously (inside the customer's tap) so it is not blocked,
-// then points it at WhatsApp once the order has been saved.
-const openPendingTab = () => {
-  let win = null;
-  try { win = window.open("", "_blank"); } catch (e) { win = null; }
-  if (!win) return null;
-  try {
-    win.document.write('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>جاري فتح واتساب</title><body style="font-family:Tahoma,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#555;direction:rtl">جاري تجهيز طلبج وفتح واتساب…</body>');
-    win.document.close();
-  } catch (e) { /* ignore */ }
-  return win;
-};
 const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - delivery to the other governorates (admin panel)
 const deliverySummary = () => `توصيل اختياري بـ ${formatPrice(DELIVERY_FEE)}`;
 
@@ -332,7 +321,7 @@ const CartDrawer = () => {
                 className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition"
                 data-testid="checkout-btn"
               >
-                <MessageCircle size={20} /> إتمام الطلب عبر واتساب
+                <ShieldCheck size={20} /> إتمام الطلب
               </button>
               <p className="text-xs text-gray-500 text-center mt-3">
                 {deliveryFee === 0 ? "🎉 توصيل مجاني لهذا الطلب" : `+ رسوم التوصيل: ${deliverySummary()}`}
@@ -878,11 +867,11 @@ const Checkout = () => {
     return { name: saved.name || "", phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
   });
   const [sent, setSent] = useState(false);
-  const [orderUrl, setOrderUrl] = useState("");
+  const [fallbackUrl, setFallbackUrl] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [receipt, setReceipt] = useState(null); // { id, items, subtotal, deliveryFee, delivery, total, saved, whatsappOpened }
+  const [receipt, setReceipt] = useState(null); // { id, items, subtotal, deliveryFee, delivery, total }
   const isKidsVideoOnly = items.length > 0 && items.every((item) => item.id === "kids-video-design");
   const allFree = items.length > 0 && items.every((i) => i.free_delivery);
   // delivery is optional: the fee applies only when the customer asks for it
@@ -929,84 +918,51 @@ const Checkout = () => {
     const name = form.name.trim().slice(0, 80);
     const customer = { name, phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
 
-    // 1) open the WhatsApp tab now, while we still have the tap
-    const pendingTab = openPendingTab();
     setSubmitting(true);
+    setFallbackUrl("");
+    const payload = { items: items.map((i) => ({ id: i.id, qty: i.qty, price: i.price, name: i.name, free_delivery: i.free_delivery })), customer };
 
-    // 2) save the order on the site (and notify the admin)
+    // save the order on the site; one quick retry if the connection drops
     let saved = null;
-    try {
-      saved = await apiRequest("/api/orders", {
-        method: "POST",
-        body: { items: items.map((i) => ({ id: i.id, qty: i.qty, price: i.price, name: i.name, free_delivery: i.free_delivery })), customer },
-        timeoutMs: 12000,
-      });
-    } catch (err) {
-      if (err.status >= 400 && err.status < 500) {
-        // the server refused the order (bad data / too many orders): let the customer fix it
-        if (pendingTab) { try { pendingTab.close(); } catch (x) { /* ignore */ } }
-        setSubmitError(err.message);
-        setSubmitting(false);
-        return;
+    for (let attempt = 0; attempt < 2 && !saved; attempt++) {
+      try {
+        saved = await apiRequest("/api/orders", { method: "POST", body: payload, timeoutMs: 15000 });
+      } catch (err) {
+        if (err.status >= 400 && err.status < 500) {
+          // the server refused the order (bad data / too many orders): let the customer fix it
+          setSubmitError(err.message);
+          setSubmitting(false);
+          return;
+        }
       }
-      saved = null; // network/server problem: still send the order by WhatsApp so it is not lost
     }
 
-    const orderItems = saved ? saved.items : items.map((i) => ({ ...i, lineTotal: i.price * i.qty }));
-    const orderSubtotal = saved ? saved.subtotal : totalPrice;
-    const orderDelivery = saved ? saved.deliveryFee : deliveryFee;
-    const grandTotal = orderSubtotal + orderDelivery;
-    const deliveryLine = !form.delivery
-      ? "🚚 بدون توصيل (استلام)"
-      : orderDelivery === 0 ? "🚚 التوصيل: مجاني" : `🚚 التوصيل: ${formatPrice(orderDelivery)}`;
-    const lines = [
-      `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
-      saved ? `🧾 رقم الطلب: ${saved.id}` : null,
-      "━━━━━━━━━━━━━━━",
-      "",
-      "📞 بيانات التوصيل",
-      `• الاسم: ${name || "غير مذكور"}`,
-      `• الهاتف: ${phone || "غير مذكور"}`,
-      `• التوصيل: ${deliveryLabel}`,
-      `• العنوان: ${form.address.trim() || "غير مذكور"}`,
-      form.notes.trim() ? `• ملاحظات: ${form.notes.trim()}` : null,
-      "",
-      "━━━━━━━━━━━━━━━",
-      "🛍️ تفاصيل الطلب",
-      "",
-      ...orderItems.map((i, idx) => `${idx + 1}) ${i.name}\n     ${i.qty} × ${formatPrice(i.price)}  =  ${formatPrice(i.price * i.qty)}`),
-      "",
-      "━━━━━━━━━━━━━━━",
-      `🧾 مجموع المنتجات: ${formatPrice(orderSubtotal)}`,
-      deliveryLine,
-      `💰 المبلغ الإجمالي: ${formatPrice(grandTotal)}`,
-      "━━━━━━━━━━━━━━━",
-      "",
-      "شكراً لطلبكم 💕"
-    ].filter((l) => l !== null).join("\n");
-
-    saveCustomer({ name, phone, delivery: form.delivery, address: form.address.trim() });
-    const url = buildWhatsAppUrl(lines);
-
-    // 3) send the WhatsApp tab to the chat. If the browser blocked the tab (Instagram/TikTok
-    //    in-app browsers), the confirmation page shows a WhatsApp button instead.
-    let whatsappOpened = false;
-    if (pendingTab && !pendingTab.closed) {
-      try { pendingTab.location.href = url; whatsappOpened = true; } catch (x) { whatsappOpened = false; }
-    }
-    if (!saved && !whatsappOpened) {
-      // order was not saved and WhatsApp did not open: go to WhatsApp in this tab so it is not lost
-      clearCart();
-      window.location.href = url;
+    if (!saved) {
+      // nothing reached us: keep the cart and let the customer try again (WhatsApp only as a manual backup)
+      const lines = [
+        `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
+        `• الاسم: ${name || "غير مذكور"}`,
+        `• الهاتف: ${phone || "غير مذكور"}`,
+        `• التوصيل: ${deliveryLabel}`,
+        `• العنوان: ${form.address.trim() || "غير مذكور"}`,
+        form.notes.trim() ? `• ملاحظات: ${form.notes.trim()}` : null,
+        "",
+        ...items.map((i, idx) => `${idx + 1}) ${i.name} — ${i.qty} × ${formatPrice(i.price)}`),
+        `💰 المبلغ الإجمالي: ${formatPrice(totalPrice + deliveryFee)}`,
+      ].filter((l) => l !== null).join("\n");
+      setFallbackUrl(buildWhatsAppUrl(lines));
+      setSubmitError("ما وصل الطلب بسبب الانترنت. تأكدي من الاتصال ودوسي «تأكيد الطلب» مرة ثانية.");
+      setSubmitting(false);
       return;
     }
 
-    setReceipt({ id: saved ? saved.id : null, items: orderItems, subtotal: orderSubtotal, deliveryFee: orderDelivery, delivery: form.delivery, total: grandTotal, saved: !!saved, whatsappOpened });
-    setOrderUrl(url);
+    saveCustomer({ name, phone, delivery: form.delivery, address: form.address.trim() });
+    setReceipt({ id: saved.id, items: saved.items, subtotal: saved.subtotal, deliveryFee: saved.deliveryFee, delivery: form.delivery, total: saved.subtotal + saved.deliveryFee });
     setSent(true);
     setSubmitting(false);
     clearCart();
     window.scrollTo(0, 0);
+    firePetals();
   };
 
   if (sent && receipt) {
@@ -1014,20 +970,12 @@ const Checkout = () => {
       <div className="max-w-xl mx-auto px-4 py-10" data-testid="order-sent">
         <div className="text-center mb-7">
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-green-100 flex items-center justify-center text-4xl">✅</div>
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{receipt.saved ? "تم استلام طلبج" : "طلبج جاهز"}</h1>
-          {receipt.saved ? (
-            <>
-              <p className="text-gray-600 mb-3">شكراً إلج 💕 راح نتواصل وياج قريباً لتأكيد الطلب والتوصيل.</p>
-              <div className="inline-flex items-center gap-2 bg-pink-50 border border-pink-200 rounded-full px-5 py-2">
-                <span className="text-sm text-gray-600">رقم الطلب</span>
-                <span className="font-extrabold text-pink-600 tracking-wider" dir="ltr" data-testid="order-number">{receipt.id}</span>
-              </div>
-            </>
-          ) : (
-            <p className="text-gray-600 leading-relaxed">
-              {receipt.whatsappOpened ? "فتحنالج واتساب ورسالة الطلب مكتوبة، بس اضغطي «إرسال» 💕" : "اضغطي الزر الأخضر حتى يوصلنا طلبج على واتساب 💕"}
-            </p>
-          )}
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبج 🌹</h1>
+          <p className="text-gray-600 mb-3">شكراً إلج 💕 راح نتواصل وياج قريباً لتأكيد الطلب والتوصيل.</p>
+          <div className="inline-flex items-center gap-2 bg-pink-50 border border-pink-200 rounded-full px-5 py-2">
+            <span className="text-sm text-gray-600">رقم الطلب</span>
+            <span className="font-extrabold text-pink-600 tracking-wider" dir="ltr" data-testid="order-number">{receipt.id}</span>
+          </div>
         </div>
 
         <div className="bg-pink-50/50 border border-pink-100 rounded-3xl p-5 mb-6" data-testid="order-receipt">
@@ -1046,9 +994,6 @@ const Checkout = () => {
           </div>
         </div>
 
-        <a href={orderUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-[#25d366] hover:bg-green-600 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition mb-3" data-testid="order-open-whatsapp">
-          <MessageCircle size={22} /> {receipt.saved ? "تأكيد الطلب عبر واتساب" : "إرسال الطلب عبر واتساب"}
-        </a>
         <button onClick={() => navigate("/")} className="w-full border-2 border-pink-200 text-pink-600 hover:bg-pink-50 py-3.5 rounded-full font-bold transition" data-testid="order-back-home">
           الرجوع للمتجر
         </button>
@@ -1140,10 +1085,11 @@ const Checkout = () => {
           </div>
 
           {submitError && submitError !== ADDRESS_ERROR && submitError !== NAME_ERROR && <p className="text-red-600 text-sm text-center bg-red-50 rounded-xl p-3" data-testid="checkout-submit-error">{submitError}</p>}
+          {fallbackUrl && submitError && <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="block text-center text-sm font-semibold text-green-700 underline" data-testid="checkout-whatsapp-fallback">أو ارسلي الطلب على واتساب</a>}
           <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
-          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد ينفتح واتساب ويَّا رسالة الطلب</p>
+          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد يوصلنا طلبج ونتواصل وياج</p>
         </form>
 
         <aside className="lg:col-span-2 min-w-0 bg-pink-50/50 rounded-3xl border border-pink-100 p-5 sm:p-6 h-fit lg:sticky lg:top-28">
@@ -1277,7 +1223,7 @@ const PrivacyPage = () => (
 
     <PrivacySection title="٣. الطلب عبر واتساب">
       <p>
-        بعد ما تأكدين الطلب، ينحفظ عدنا بالموقع وينفتح واتساب ويا رسالة فيها تفاصيل الطلب حتى ترسلينها إلنا. الرسائل اللي تتبادلينها ويانا على واتساب تخضع أيضاً لسياسة خصوصية واتساب نفسه.
+        بعد ما تأكدين الطلب، ينحفظ عدنا بالموقع ونتواصل وياج لتأكيده. إذا راسلتينا على واتساب، فالرسائل تخضع أيضاً لسياسة خصوصية واتساب نفسه.
       </p>
     </PrivacySection>
 
@@ -1361,6 +1307,18 @@ const CategoriesPage = () => (
   </div>
 );
 
+// Not linked anywhere: lets the owner see the order celebration without placing an order.
+const PetalsPreview = () => {
+  useEffect(() => { firePetals(); }, []);
+  return (
+    <div className="max-w-xl mx-auto px-4 py-16 text-center" data-testid="petals-preview">
+      <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبج 🌹</h1>
+      <p className="text-gray-600 mb-6">هذا شكل الاحتفال بعد تأكيد الطلب (معاينة فقط، ما ينحفظ أي طلب).</p>
+      <button onClick={() => firePetals()} className="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-full" data-testid="petals-again">شوف مرة ثانية</button>
+    </div>
+  );
+};
+
 // ============== COOKIE CONSENT ==============
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
@@ -1440,6 +1398,7 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/petals-preview" element={<PetalsPreview />} />
               <Route path="*" element={<Home />} />
             </Routes>
           </main>
