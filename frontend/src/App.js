@@ -2,7 +2,7 @@ import React, { useEffect, useState, createContext, useContext, useMemo, Suspens
 import { HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "./localAxios";
 import staticData from "./staticData.json";
-import { ShoppingBag, Heart, Search, Menu, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook } from "lucide-react";
+import { ShoppingBag, Heart, Search, Menu, X, ChevronLeft, Plus, Minus, Trash2, MessageCircle, Truck, ShieldCheck, Sparkles, Phone, MapPin, Instagram, Facebook, Home as HomeIcon, LayoutGrid, BadgePercent } from "lucide-react";
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
@@ -1151,11 +1151,68 @@ const FloatingWhatsApp = () => (
     href={`https://wa.me/${WHATSAPP_NUMBER}`}
     target="_blank"
     rel="noopener noreferrer"
-    className="fixed bottom-6 left-6 z-30 w-14 h-14 rounded-full bg-[#25d366] hover:bg-green-600 text-white shadow-2xl flex items-center justify-center transition-transform hover:scale-110"
+    className="fixed bottom-28 lg:bottom-6 left-4 lg:left-6 z-30 w-14 h-14 rounded-full bg-[#25d366] hover:bg-green-600 text-white shadow-2xl flex items-center justify-center transition-transform hover:scale-110"
     data-testid="floating-whatsapp"
   >
     <MessageCircle size={26} />
   </a>
+);
+
+// ============== MOBILE BOTTOM NAV ==============
+const BottomNav = () => {
+  const { totalQty, isCartOpen, setIsCartOpen, wishlist } = useCart();
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
+
+  const items = [
+    { key: "home", label: "الرئيسية", icon: HomeIcon, to: "/", active: pathname === "/" },
+    { key: "categories", label: "الفئات", icon: LayoutGrid, to: "/categories", active: pathname === "/categories" || pathname.startsWith("/collection/category-") },
+    { key: "offers", label: "عروضنا", icon: BadgePercent, to: "/collection/offers", active: pathname === "/collection/offers" },
+    { key: "cart", label: "السلة", icon: ShoppingBag, onClick: () => setIsCartOpen(true), active: isCartOpen, badge: totalQty },
+    { key: "wishlist", label: "المفضلة", icon: Heart, to: "/wishlist", active: pathname === "/wishlist", badge: wishlist.length },
+  ];
+
+  return (
+    <nav
+      className="lg:hidden fixed inset-x-3 z-40 bg-white/95 backdrop-blur rounded-3xl border border-pink-100 shadow-[0_8px_30px_rgba(233,30,99,0.15)]"
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+      aria-label="التنقل السريع"
+      data-testid="bottom-nav"
+    >
+      <ul className="grid grid-cols-5 px-1 py-2">
+        {items.map(({ key, label, icon: Icon, to, onClick, active, badge }) => {
+          const inner = (
+            <>
+              <span className={`relative w-11 h-11 rounded-full flex items-center justify-center transition ${active ? "bg-pink-100 text-[#e91e63]" : "bg-pink-50/70 text-gray-600"}`}>
+                <Icon size={21} strokeWidth={active ? 2.4 : 1.9} />
+                {badge > 0 && (
+                  <span className="absolute -top-1 -left-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e91e63] text-white text-[10px] font-bold flex items-center justify-center">{badge > 99 ? "99+" : badge}</span>
+                )}
+              </span>
+              <span className={`mt-1 text-[11px] leading-none ${active ? "text-[#e91e63] font-bold" : "text-gray-600 font-medium"}`}>{label}</span>
+            </>
+          );
+          const cls = "w-full flex flex-col items-center justify-center py-1 focus:outline-none";
+          return (
+            <li key={key}>
+              {to ? (
+                <Link to={to} className={cls} aria-current={active ? "page" : undefined} data-testid={`bottom-nav-${key}`}>{inner}</Link>
+              ) : (
+                <button type="button" onClick={onClick} className={cls} data-testid={`bottom-nav-${key}`}>{inner}</button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+};
+
+// ============== CATEGORIES PAGE ==============
+const CategoriesPage = () => (
+  <div className="pb-4">
+    <CategoriesSection />
+  </div>
 );
 
 // ============== COOKIE CONSENT ==============
@@ -1199,12 +1256,13 @@ function App() {
       <HashRouter>
         <div dir="rtl" className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
           <Header />
-          <main className="flex-1">
+          <main className="flex-1 pb-24 lg:pb-0">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/collection/:slug" element={<Collection />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<AdminBoundary><Suspense fallback={<div className="py-20 text-center text-gray-500">جاري التحميل...</div>}><Admin /></Suspense></AdminBoundary>} />
@@ -1212,6 +1270,7 @@ function App() {
           </main>
           <Footer />
           <CartDrawer />
+          <BottomNav />
           <FloatingWhatsApp />
           <CookieConsent />
         </div>
