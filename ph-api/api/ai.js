@@ -9,6 +9,8 @@
 import { route, readBody, HttpError } from "../lib/http.js";
 import { requireAdmin } from "../lib/auth.js";
 
+// GROQ_APIKEY is accepted too: that is how the key was saved in Vercel
+const groqKey = () => process.env.GROQ_API_KEY || process.env.GROQ_APIKEY || "";
 const BASE_URL = () => (process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1").replace(/\/+$/, "");
 const MAX_IMAGE_CHARS = 3_000_000; // ~2.2 MB JPEG, well under the 4.5 MB body limit
 const MAX_PROMPT_CHARS = 14000; // room for a product page's text
@@ -121,9 +123,9 @@ const TINY_JPEG =
 export default route({
   GET: async (req) => {
     const url = new URL(req.url, "https://x");
-    if (url.searchParams.get("probe") !== "1") return { enabled: !!process.env.GROQ_API_KEY };
+    if (url.searchParams.get("probe") !== "1") return { enabled: !!groqKey() };
     await requireAdmin(req);
-    const key = process.env.GROQ_API_KEY;
+    const key = groqKey();
     if (!key) throw new HttpError(503, "مفتاح Groq مو محطوط بالسيرفر.");
     const result = {};
     for (const [name, img, prompt] of [["text", "", "اكتب كلمة واحدة بالعربي: مرحبا"], ["vision", TINY_JPEG, "What colour is this image? One word."]]) {
@@ -138,7 +140,7 @@ export default route({
   },
   POST: async (req) => {
     await requireAdmin(req);
-    const key = process.env.GROQ_API_KEY;
+    const key = groqKey();
     if (!key) throw new HttpError(503, "مفتاح Groq مو محطوط بالسيرفر.");
     rateLimit("admin");
     const body = readBody(req);
