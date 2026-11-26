@@ -6,3 +6,4 @@ frontend/.env
 *.log
 .DS_Store
 frontend/public/staticData.json
+__pycache__/
