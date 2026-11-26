@@ -23,7 +23,7 @@ const drawPetal = (ctx, size, color) => {
   ctx.fill();
 };
 
-export const firePetals = ({ pieces = 70, duration = 4200 } = {}) => {
+export const firePetals = ({ pieces = 70, duration = 4200, from = "sides" } = {}) => {
   if (typeof window === "undefined" || typeof document === "undefined") return;
   try {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -67,8 +67,30 @@ export const firePetals = ({ pieces = 70, duration = 4200 } = {}) => {
       });
     }
   };
-  cannon(true, 0);
-  cannon(false, 90);
+  const burst = () => {
+    // the capsule opens in the middle of the screen: petals fly out all around, mostly up
+    for (let i = 0; i < pieces * 2; i++) {
+      const angle = -90 + (Math.random() - 0.5) * 300;
+      const rad = (angle * Math.PI) / 180;
+      const v = speed * (0.35 + Math.random() * 0.6);
+      parts.push({
+        born: Math.random() * 90,
+        x: W / 2 + (Math.random() - 0.5) * 30,
+        y: H / 2 + (Math.random() - 0.5) * 16,
+        vx: Math.cos(rad) * v,
+        vy: Math.sin(rad) * v,
+        size: 12 + Math.random() * 13,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.12,
+        flip: Math.random() * Math.PI * 2,
+        vflip: 0.05 + Math.random() * 0.08,
+        sway: Math.random() * Math.PI * 2,
+        color: COLORS[(Math.random() * COLORS.length) | 0],
+      });
+    }
+  };
+  if (from === "center") burst();
+  else { cannon(true, 0); cannon(false, 90); }
 
   const start = performance.now();
   let last = start;

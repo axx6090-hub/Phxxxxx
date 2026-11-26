@@ -8,7 +8,7 @@ import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
 import { optimized, fallbackTo } from "./lib/img";
-import { firePetals } from "./lib/confetti";
+import { playOrderCelebration } from "./lib/pillBurst";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
 // exists. In that case reload once from the server instead of showing a blank page.
@@ -962,7 +962,7 @@ const Checkout = () => {
     setSubmitting(false);
     clearCart();
     window.scrollTo(0, 0);
-    firePetals();
+    playOrderCelebration();
   };
 
   if (sent && receipt) {
@@ -1309,12 +1309,12 @@ const CategoriesPage = () => (
 
 // Not linked anywhere: lets the owner see the order celebration without placing an order.
 const PetalsPreview = () => {
-  useEffect(() => { firePetals(); }, []);
+  useEffect(() => { playOrderCelebration(); }, []);
   return (
     <div className="max-w-xl mx-auto px-4 py-16 text-center" data-testid="petals-preview">
       <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبج 🌹</h1>
       <p className="text-gray-600 mb-6">هذا شكل الاحتفال بعد تأكيد الطلب (معاينة فقط، ما ينحفظ أي طلب).</p>
-      <button onClick={() => firePetals()} className="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-full" data-testid="petals-again">شوف مرة ثانية</button>
+      <button onClick={() => playOrderCelebration()} className="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-full" data-testid="petals-again">شوف مرة ثانية</button>
     </div>
   );
 };
