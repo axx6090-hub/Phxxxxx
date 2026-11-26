@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2, Sparkles, X, Search, Link2 } from "lucide-react";
 import { loadStoreData, publishStore } from "./github";
 import { apiRequest } from "../ordersApi";
-import { AI_MODELS, DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageToFile, normalizeLink, blobToDataUrl, dataUrlToBase64, makeWhiteBackground, resizeForAnalysis, serverAiAvailable } from "./ai";
+import { DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageToFile, normalizeLink, blobToDataUrl, dataUrlToBase64, makeWhiteBackground, resizeForAnalysis, serverAiAvailable } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
@@ -146,8 +146,8 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       const analysisImage = await resizeForAnalysis(file);
       const serverAi = ai.serverAi || (await serverAiAvailable());
 
-      const analysis = serverAi || ai.browserKey
-        ? analyzeProduct({ serverToken: serverAi ? ai.token : "", browserKey: ai.browserKey, model: ai.model, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
+      const analysis = serverAi
+        ? analyzeProduct({ serverToken: ai.token, browserKey: "", model: ai.model, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes })
             .then((r) => ({ ok: true, r }))
             .catch((err) => ({ ok: false, err }))
         : Promise.resolve(null);
@@ -157,7 +157,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       setStatus("قراءة اسم المنتج ووصفه...");
       const result = await analysis;
       if (result === null) {
-        newNotes.push("الذكاء الاصطناعي مو شغال بالسيرفر هسه، فاكتب الاسم والوصف يدوياً.");
+        newNotes.push("الذكاء الاصطناعي يشتغل بعد ما ينضاف مفتاح Groq بـ Vercel. هسه اكتب الاسم والوصف يدوياً.");
       } else if (!result.ok) {
         newNotes.push(`تحليل الاسم والوصف فشل: ${result.err.message}`);
       } else {
@@ -177,16 +177,12 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
     if (!url) return setError("الرابط غير صحيح. الصق رابط صفحة المنتج كامل، مثل https://...");
     setBusy(true);
     const serverAi = ai.serverAi || (await serverAiAvailable());
-    if (!serverAi && !ai.browserKey) {
-      setBusy(false);
-      return setError("الذكاء الاصطناعي مو شغال بالسيرفر هسه. حدّث الصفحة وجرّب مرة ثانية.");
-    }
     setError("");
     setNotes([]);
     const newNotes = [];
     try {
       setStatus("قراءة صفحة المنتج...");
-      const serverToken = serverAi ? ai.token : "";
+      const serverToken = ai.token;
       const page = await readProductLink({ serverToken, url });
 
       let imgFile = null;
@@ -199,7 +195,8 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       setStatus("الذكاء الاصطناعي يكتب الاسم والوصف...");
       let r;
       try {
-        r = await analyzeLink({ serverToken, browserKey: ai.browserKey, model: ai.model, url, page, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes });
+        if (!serverAi) throw new Error("مفتاح Groq بعده مو محطوط بـ Vercel");
+        r = await analyzeLink({ serverToken, browserKey: "", model: ai.model, url, page, imageDataUrl: analysisImage, categories: data.categories, skinTypes: data.skinTypes });
       } catch (aiErr) {
         if (!page || !(page.title || page.description)) throw aiErr;
         // the AI failed: fill what the page itself says, for the admin to fix up
@@ -385,19 +382,16 @@ const Panel = ({ token, initial, onLogout }) => {
   const [filter, setFilter] = useState("");
   const [publishing, setPublishing] = useState("");
   const [message, setMessage] = useState(null);
-  const [aiKey, setAiKey] = useState(() => store.get(AI_KEY));
-  const [aiModel, setAiModel] = useState(() => {
-    const saved = store.get(AI_MODEL_KEY);
-    return AI_MODELS.some((m) => m.id === saved) ? saved : DEFAULT_AI_MODEL;
-  });
   const [serverAi, setServerAi] = useState(false);
   useEffect(() => {
     // drop keys saved by older versions of this panel
     store.set("admin_ai_key", "");
     store.set("admin_gemini_key", "");
+    store.set(AI_KEY, "");
+    store.set(AI_MODEL_KEY, "");
     serverAiAvailable().then(setServerAi);
   }, []);
-  const ai = { model: aiModel, browserKey: aiKey, serverAi, token };
+  const ai = { model: DEFAULT_AI_MODEL, browserKey: "", serverAi, token };
   const [newCat, setNewCat] = useState({ name: "", emoji: "", home: true });
 
   useEffect(() => {
@@ -624,24 +618,11 @@ const Panel = ({ token, initial, onLogout }) => {
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-1">الذكاء الاصطناعي</h2>
             <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              شيل الخلفية يشتغل على جهازك مباشرة وما يحتاج مفتاح. قراءة الاسم والوصف والسعر من الصورة تمر من حسابك بـ xingchiapi.
-              {serverAi ? " المفتاح محفوظ بالسيرفر وما يوصل للمتصفح." : " بعد النشر ينحط المفتاح بالسيرفر. للتجربة هسه تگدر تلصقه هنا وينحفظ بهذا المتصفح فقط."}
+              شيل الخلفية يشتغل على جهازك مباشرة وما يحتاج مفتاح. كتابة الاسم والوصف بالعربي وقراءة العلبة من الصورة تمر من حسابك بـ Groq.
+              {serverAi ? " المفتاح محفوظ بالسيرفر وما يوصل للمتصفح." : " لحد هسه ماكو مفتاح: سوّي مفتاح بحسابك بـ Groq وحطه بـ Vercel (مشروع balyiq-api) باسم GROQ_API_KEY، وبعدين أعد النشر."}
             </p>
-            {!serverAi && (
-              <>
-                <label className="block text-sm font-medium text-gray-700 mb-1">مفتاح xingchiapi (للتجربة بهذا المتصفح)</label>
-                <input type="password" value={aiKey} onChange={(e) => { setAiKey(e.target.value.trim()); store.set(AI_KEY, e.target.value.trim()); }} placeholder="sk-..." dir="ltr" autoComplete="off" className={inputCls} data-testid="admin-ai-key" />
-              </>
-            )}
-            {serverAi ? (
-              <p className="text-sm text-gray-600 mt-3">السيرفر يختار الموديل اللي يقبله حسابك بـ xingchiapi تلقائياً.</p>
-            ) : (<>
-            <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">الموديل</label>
-            <select value={aiModel} onChange={(e) => { setAiModel(e.target.value); store.set(AI_MODEL_KEY, e.target.value); }} className={inputCls} data-testid="admin-ai-model">
-              {AI_MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-            </select>
-            </>)}
-            <p className="text-xs text-gray-500 mt-2 leading-relaxed">السعر المقترح تقدير من الموديل نفسه بدون بحث بالإنترنت، فراجعه دائماً. صور المنتجات تمر من xingchiapi، فلا ترسل صور فيها معلومات شخصية.</p>
+            {serverAi && <p className="text-sm text-gray-600 mt-3">السيرفر يستخدم موديل يقرأ الصور للصور، وموديل نصوص للروابط.</p>}
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">السعر المقترح تقدير من الموديل نفسه بدون بحث بالإنترنت، فراجعه دائماً. صور المنتجات تمر من Groq، فلا ترسل صور فيها معلومات شخصية.</p>
           </div>
           <div className="border-t border-pink-100 pt-5">
             <h2 className="text-lg font-bold text-gray-900 mb-1">الحساب</h2>

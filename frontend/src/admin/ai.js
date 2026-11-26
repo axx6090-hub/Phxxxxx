@@ -1,6 +1,6 @@
 // AI helpers for the admin panel.
 //  - background removal uses an on-device model (no key, no server)
-//  - product analysis goes through the XingChi API gateway (xingchiapi.com).
+//  - product analysis goes through the store server (ph-api /api/ai), which calls Groq.
 //    The key normally lives on the store's server (ph-api /api/ai); a key saved
 //    in this browser is only a fallback for testing before the server is live.
 import { apiRequest } from "../ordersApi";
