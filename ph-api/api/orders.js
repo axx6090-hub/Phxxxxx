@@ -59,6 +59,7 @@ const createOrder = async (req) => {
     const product = catalog && catalog.get(id);
     // with the catalog loaded, an unknown product id is a forged or stale cart
     if (catalog && !product) throw new HttpError(400, "منتج بالسلة مو موجود بالمتجر، حدّث الصفحة وجرب مرة ثانية.");
+    if (product && product.out_of_stock === true) throw new HttpError(400, `«${String(product.name || "منتج").slice(0, 80)}» غير متوفر حالياً، احذفيه من السلة.`);
     if (!product) unverified = true;
     const price = product ? Number(product.price) || 0 : Math.max(0, Math.round(Number(it.price) || 0));
     const name = product ? product.name : clean(it.name, 200);

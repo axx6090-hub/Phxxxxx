@@ -68,7 +68,7 @@ const Login = ({ onLogin }) => {
 };
 
 // ============== PRODUCT FORM (add / edit) ==============
-const emptyForm = () => ({ name: "", name_en: "", description: "", brand: "", category: "", skin_type: [], price: "", sale_price: "", free_delivery: false });
+const emptyForm = () => ({ name: "", name_en: "", description: "", brand: "", category: "", skin_type: [], price: "", sale_price: "", free_delivery: false, out_of_stock: false });
 
 const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
   const editing = !!initial;
@@ -245,6 +245,7 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
       skin_type: form.skin_type,
       brand: form.brand.trim(),
       free_delivery: !!form.free_delivery,
+      out_of_stock: !!form.out_of_stock,
     };
     if (old > price) product.sale_price = old;
     const badge = badgeFor(price, old);
@@ -352,6 +353,9 @@ const ProductForm = ({ data, initial, ai, onSave, onCancel }) => {
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={!!form.free_delivery} onChange={(e) => set({ free_delivery: e.target.checked })} /> توصيل مجاني لهذا المنتج
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={!!form.out_of_stock} onChange={(e) => set({ out_of_stock: e.target.checked })} data-testid="admin-out-of-stock" /> غير متوفر حالياً (ينعرض بالمتجر بس ما ينضاف للسلة)
           </label>
         </div>
       </div>
@@ -570,6 +574,14 @@ const Panel = ({ token, initial, onLogout }) => {
                   <p className="font-semibold text-sm text-gray-900 truncate">{p.name}</p>
                   <p className="text-xs text-gray-500 truncate">{categoryName(p.category)} · {formatPrice(p.price)}{images[p.id] ? " · صورة جديدة" : ""}</p>
                 </div>
+                <button
+                  onClick={() => change((d) => { const x = d.products.find((q) => q.id === p.id); if (x) x.out_of_stock = !x.out_of_stock; return d; })}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${p.out_of_stock ? "bg-gray-800 text-white" : "bg-green-50 text-green-700"}`}
+                  title="اضغط حتى تغيّر حالة التوفر"
+                  data-testid={`admin-stock-${p.id}`}
+                >
+                  {p.out_of_stock ? "غير متوفر" : "متوفر"}
+                </button>
                 <button onClick={() => setEditingId(p.id)} className="text-sm font-semibold text-pink-600 hover:underline shrink-0" data-testid={`admin-edit-${p.id}`}>تعديل</button>
                 <button onClick={() => deleteProduct(p)} className="text-gray-400 hover:text-red-500 shrink-0" aria-label="حذف" data-testid={`admin-delete-${p.id}`}><Trash2 size={18} /></button>
               </div>

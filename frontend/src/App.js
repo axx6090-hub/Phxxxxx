@@ -124,6 +124,10 @@ const pushRecent = (id) => {
 };
 
 // ============== CART CONTEXT ==============
+// A product the admin marked «غير متوفر» can't go in the cart or an order.
+const OUT_OF_STOCK = new Set(staticData.products.filter((p) => p.out_of_stock === true).map((p) => p.id));
+const isOutOfStock = (p) => !!p && (p.out_of_stock === true || OUT_OF_STOCK.has(p.id));
+
 const CartContext = createContext(null);
 const useCart = () => useContext(CartContext);
 
@@ -150,6 +154,7 @@ const CartProvider = ({ children }) => {
   }, [wishlist]);
 
   const addToCart = (product, qty = 1) => {
+    if (isOutOfStock(product)) return;
     setItems((prev) => {
       const existing = prev.find((i) => i.id === product.id);
       if (existing) {
@@ -299,6 +304,7 @@ const CartDrawer = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium line-clamp-2 text-gray-800 mb-1">{item.name}</p>
                     <p className="text-pink-600 font-bold text-sm mb-2">{formatPrice(item.price)}</p>
+                    {isOutOfStock(item) && <p className="text-xs font-bold text-red-600 mb-2" data-testid={`cart-oos-${item.id}`}>غير متوفر حالياً، احذفيه من السلة</p>}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center border border-pink-200 rounded-full">
                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="px-2 py-1 hover:bg-pink-50 rounded-full" data-testid={`qty-minus-${item.id}`}><Minus size={14} /></button>
@@ -320,7 +326,8 @@ const CartDrawer = () => {
               </div>
               <button
                 onClick={() => { setIsCartOpen(false); navigate("/checkout"); }}
-                className="w-full bg-[#e91e63] hover:bg-pink-700 text-white py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition"
+                disabled={items.some(isOutOfStock)}
+                className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 rounded-full font-bold text-base flex items-center justify-center gap-2 transition"
                 data-testid="checkout-btn"
               >
                 <MessageCircle size={20} /> إتمام الطلب عبر واتساب
@@ -345,7 +352,11 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden border border-pink-50 hover:border-pink-200 hover:shadow-xl transition-all duration-300" data-testid={`product-card-${product.id}`}>
-      {product.badge && (
+      {isOutOfStock(product) ? (
+        <div className="absolute top-3 right-3 z-10 bg-gray-800 text-white text-xs font-bold px-2.5 py-1 rounded-full" data-testid={`out-of-stock-${product.id}`}>
+          غير متوفر
+        </div>
+      ) : product.badge && (
         <div className="absolute top-3 right-3 z-10 bg-[#e91e63] text-white text-xs font-bold px-2.5 py-1 rounded-full">
           {product.badge}
         </div>
@@ -374,7 +385,7 @@ const ProductCard = ({ product }) => {
           {hasDiscount && <span className="text-gray-400 line-through text-xs">{formatPrice(product.sale_price)}</span>}
         </div>
         {/* Social proof */}
-        {!isFreeNoWhatsApp && SETTINGS.showSocialProof && (() => {
+        {!isFreeNoWhatsApp && !isOutOfStock(product) && SETTINGS.showSocialProof && (() => {
           const sp = getSocialProof(product.id);
           return (
             <div className="flex items-center gap-1 text-[11px] text-red-500 font-semibold mb-3 animate-pulse">
@@ -391,6 +402,14 @@ const ProductCard = ({ product }) => {
           >
             <Sparkles size={15} /> عرض الوصف المجاني
           </Link>
+        ) : isOutOfStock(product) ? (
+          <button
+            disabled
+            className="w-full bg-gray-200 text-gray-500 py-2.5 rounded-full text-sm font-semibold cursor-not-allowed"
+            data-testid={`add-to-cart-${product.id}`}
+          >
+            غير متوفر حالياً
+          </button>
         ) : (
           <button
             onClick={() => addToCart(product)}
@@ -738,7 +757,7 @@ const ProductDetail = () => {
             {hasDiscount && <span className="text-gray-400 line-through text-lg">{formatPrice(product.sale_price)}</span>}
           </div>
           {/* Social proof banner */}
-          {!isFreeNoWhatsApp && SETTINGS.showSocialProof && (() => {
+          {!isFreeNoWhatsApp && !isOutOfStock(product) && SETTINGS.showSocialProof && (() => {
             const sp = getSocialProof(product.id);
             return (
               <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 text-sm font-bold px-3 py-2 rounded-full mb-6 animate-pulse w-fit">
@@ -756,6 +775,15 @@ const ProductDetail = () => {
                 <Sparkles size={20} /> {copied ? "تم نسخ الوصف" : "نسخ وصف التصميم مجاناً"}
               </button>
               <p className="text-center text-xs text-gray-500 mt-3">هذا المنتج مجاني ولا يحوّلك إلى واتساب.</p>
+            </div>
+          ) : isOutOfStock(product) ? (
+            <div className="flex gap-3 mb-6">
+              <button disabled className="flex-1 bg-gray-200 text-gray-500 py-4 rounded-full font-bold cursor-not-allowed" data-testid="detail-add-cart">
+                غير متوفر حالياً
+              </button>
+              <button onClick={() => toggleWishlist(product.id)} className={`w-14 h-14 rounded-full flex items-center justify-center transition ${isWish ? "bg-pink-600 text-white" : "border-2 border-pink-200 text-pink-600 hover:bg-pink-50"}`} data-testid="detail-wishlist">
+                <Heart size={20} fill={isWish ? "currentColor" : "none"} />
+              </button>
             </div>
           ) : (
             <>
@@ -857,6 +885,11 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (items.length === 0 || submitting) return;
+    const unavailable = items.filter(isOutOfStock);
+    if (unavailable.length) {
+      setSubmitError(`${unavailable.map((i) => i.name).join("، ")} غير متوفر حالياً، احذفيه من السلة.`);
+      return;
+    }
 
     if ((!isKidsVideoOnly || form.phone.trim()) && !isIraqiPhone(form.phone)) {
       setPhoneError("اكتبي رقم هاتف عراقي صحيح من 11 رقم، مثل 07701234567");
