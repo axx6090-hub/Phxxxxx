@@ -1,5 +1,7 @@
 // Orders API (Vercel project "ph-orders-api"): saves orders and notifies the admin.
-export const ORDERS_API = (process.env.REACT_APP_ORDERS_API || "https://api.balyiq.site").replace(/\/+$/, "");
+// The admin address always talks to api.balyiq.site: same site, so its session cookie is sent.
+const onAdminHost = typeof window !== "undefined" && /^admin\.balyiq\.site$/i.test(window.location.hostname);
+export const ORDERS_API = (onAdminHost ? "https://api.balyiq.site" : process.env.REACT_APP_ORDERS_API || "https://api.balyiq.site").replace(/\/+$/, "");
 
 export class ApiError extends Error {
   constructor(status, message) {

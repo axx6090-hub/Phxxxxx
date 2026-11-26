@@ -1311,9 +1311,10 @@ const CookieConsent = () => {
 };
 
 // ============== APP ==============
-// The admin panel is its own build (REACT_APP_ADMIN=1, served at admin.balyiq.site); the
-// public store has no admin page at all. Access is checked by the server with a password.
-const IS_ADMIN_BUILD = process.env.REACT_APP_ADMIN === "1";
+// The admin panel opens only on its own address (admin.balyiq.site, or a build with
+// REACT_APP_ADMIN=1); the public store has no admin page. The server checks the password.
+const IS_ADMIN_BUILD = process.env.REACT_APP_ADMIN === "1" ||
+  (typeof window !== "undefined" && /^admin\./i.test(window.location.hostname));
 
 const AdminApp = () => {
   useEffect(() => {
