@@ -500,6 +500,13 @@ const Panel = ({ token, initial, onLogout }) => {
         </div>
       </div>
 
+      {initial.tokenProblem && (
+        <div className="mb-5 rounded-2xl p-4 bg-red-50 border border-red-200 text-sm text-gray-800" data-testid="admin-token-banner">
+          <p className="font-bold text-red-700 mb-1">حفظ المنتجات متوقف حالياً</p>
+          <p>{initial.tokenProblem} تگدر تشوف وتجهز المنتجات، بس النشر ما يشتغل حتى ينصلح رمز GitHub بـ Vercel.</p>
+        </div>
+      )}
+
       {(dirty > 0 || message || publishing) && (
         <div className={`sticky top-2 z-40 mb-5 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-md ${message && !message.ok ? "bg-red-50 border border-red-200" : message && message.ok && !dirty ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"}`} data-testid="admin-publish-bar">
           <p className="text-sm font-semibold text-gray-800">

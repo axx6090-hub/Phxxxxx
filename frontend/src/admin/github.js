@@ -46,7 +46,7 @@ export const base64ToUtf8 = (b64) => {
 /** Reads the store data straight from the repository (always the latest version). */
 export const loadStoreData = async () => {
   const file = await call(`/api/repo?path=${encodeURIComponent(DATA_PATH)}`);
-  return { data: JSON.parse(base64ToUtf8(file.content)), sha: file.sha };
+  return { data: JSON.parse(base64ToUtf8(file.content)), sha: file.sha, tokenProblem: file.tokenProblem || "" };
 };
 
 const getSha = async (token, path) => {

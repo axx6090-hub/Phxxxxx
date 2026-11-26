@@ -12,8 +12,10 @@ const BRANCH = process.env.STORE_BRANCH || "main";
 const ALLOWED = /^(frontend\/src\/staticData\.json|frontend\/public\/images\/(products|banners)\/[A-Za-z0-9_-]{1,80}\.jpg)$/;
 const MAX_B64 = 4_000_000;
 
+// trim: a pasted token often carries a space or a line break
+const rawToken = () => (process.env.STORE_GITHUB_TOKEN || "").trim();
 const ghToken = () => {
-  const t = process.env.STORE_GITHUB_TOKEN || "";
+  const t = rawToken();
   if (!t) throw new HttpError(503, "رمز GitHub مال السيرفر (STORE_GITHUB_TOKEN) مو مضاف بـ Vercel بعد.");
   return t;
 };
@@ -48,12 +50,40 @@ const readPublic = async (path, metaOnly) => {
   return metaOnly ? { sha } : { content: buf.toString("base64"), sha, readOnly: true };
 };
 
+/** Checks the server token against GitHub. Returns only statuses and flags, never the token. */
+export const checkToken = async () => {
+  const t = rawToken();
+  if (!t) return { set: false };
+  const kind = t.startsWith("github_pat_") ? "fine-grained" : t.startsWith("ghp_") ? "classic" : "other";
+  const out = { set: true, kind, hadSpaces: t !== (process.env.STORE_GITHUB_TOKEN || ""), innerSpaces: /\s/.test(t) };
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}`, { headers: headers(), cache: "no-store" });
+    out.status = res.status;
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) out.canWrite = !!(body.permissions && body.permissions.push);
+    else out.message = String(body.message || "").slice(0, 120);
+  } catch (e) {
+    out.status = 0;
+  }
+  console.log("store token check", JSON.stringify(out)); // statuses only, no token
+  return out;
+};
+
+const tokenProblem = (status) => fail(status).message;
+
 export default route({
   GET: async (req) => {
     await requireAdmin(req);
     const path = checkPath(req.query?.path);
-    if (!process.env.STORE_GITHUB_TOKEN) return readPublic(path, !!req.query?.meta);
+    if (!rawToken()) return readPublic(path, !!req.query?.meta);
     const res = await fetch(`${url(path)}?ref=${BRANCH}`, { headers: headers(), cache: "no-store" });
+    // The repo is public: when the token is refused, still read the file so the panel opens,
+    // and tell the panel why saving won't work yet.
+    if (!res.ok && [401, 403, 404].includes(res.status)) {
+      console.error("store token refused on read", res.status);
+      const pub = await readPublic(path, !!req.query?.meta);
+      return { ...pub, tokenProblem: tokenProblem(res.status) };
+    }
     if (!res.ok) throw fail(res.status);
     const file = await res.json();
     if (req.query?.meta) return { sha: file.sha };
