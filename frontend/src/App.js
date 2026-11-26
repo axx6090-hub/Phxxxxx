@@ -505,6 +505,15 @@ const RecentlyViewed = () => {
 };
 
 // ============== CATEGORIES SECTION ==============
+// A real product photo for each category tile: the category's own image if
+// the admin set one, otherwise a product from that category (clean PNGs first).
+const categoryImage = (c) => {
+  if (c.image) return c.image;
+  const inCat = staticData.products.filter((p) => p.category === c.slug && p.image && !/placeholder/.test(p.image));
+  const png = inCat.find((p) => /\.png(\?|$)/i.test(p.image));
+  return (png || inCat[0] || {}).image || "";
+};
+
 const CategoriesSection = () => {
   const [cats, setCats] = useState(staticData.categories);
   useEffect(() => {
@@ -517,11 +526,13 @@ const CategoriesSection = () => {
       <div className="grid grid-cols-3 md:grid-cols-9 gap-3">
         {cats.map((c) => (
           <Link key={c.id} to={`/collection/category-${c.slug}`} className="group text-center" data-testid={`category-${c.slug}`}>
-            <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl overflow-hidden mb-2 group-hover:shadow-lg transition">
-              {c.emoji ? (
-                <span className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl group-hover:scale-110 transition-transform" aria-hidden="true">{c.emoji}</span>
+            <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl overflow-hidden mb-2 p-2 group-hover:shadow-lg transition">
+              {categoryImage(c) ? (
+                <div className="w-full h-full bg-white rounded-xl overflow-hidden flex items-center justify-center">
+                  <img src={categoryImage(c)} alt={c.name} loading="lazy" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
+                </div>
               ) : (
-                <img src={c.image} alt={c.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" />
+                <span className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl group-hover:scale-110 transition-transform" aria-hidden="true">{c.emoji}</span>
               )}
             </div>
             <p className="text-xs sm:text-sm font-semibold text-gray-700 group-hover:text-pink-600">{c.name}</p>
