@@ -162,6 +162,8 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
             <span className="font-extrabold text-gray-900" dir="ltr">#{order.id}</span>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
             {isNew && <span className="text-xs font-bold text-pink-600">● جديد</span>}
+            {order.prep?.state === "prepared" && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700" data-testid={`admin-order-prep-${order.id}`}>✅ جهّزه {order.prep.by}</span>}
+            {order.prep && order.prep.state !== "prepared" && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700" data-testid={`admin-order-prep-${order.id}`}>⏳ بعده محد جهّزه</span>}
           </div>
           <p className="text-xs text-gray-500 mt-1 truncate">{order.customer.name || order.customer.phone || "—"} · {order.customer.delivery === false ? "بدون توصيل" : (order.customer.city || "توصيل")} · {formatDate(order.createdAt)}</p>
         </div>
@@ -212,6 +214,14 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
             ))}
             <button type="button" onClick={remove} disabled={busy} className="mr-auto text-gray-400 hover:text-red-500" aria-label="حذف الطلب" data-testid={`admin-order-delete-${order.id}`}><Trash2 size={18} /></button>
           </div>
+          {order.prep?.history?.length > 0 && (
+            <div className="text-xs text-gray-500 space-y-0.5" data-testid={`admin-order-prep-history-${order.id}`}>
+              <p className="font-semibold text-gray-600">من الواتساب:</p>
+              {order.prep.history.map((h, i) => (
+                <p key={i}>{h.state === "prepared" ? "✅ تم التجهيز" : "⏳ بعده ما تجهز"} · {h.by} · {formatDate(h.at)}</p>
+              ))}
+            </div>
+          )}
           {err && <p className="text-red-600 text-xs">{err}</p>}
         </div>
       )}

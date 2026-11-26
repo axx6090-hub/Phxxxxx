@@ -8,6 +8,7 @@ import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob 
 import { requireAdmin } from "../lib/auth.js";
 import { loadCatalog, deliveryFee as settingsDeliveryFee } from "../lib/catalog.js";
 import { notifyNewOrder } from "../lib/notify.js";
+import { sendOrderToStaff, remindUnprepared } from "../lib/whatsapp.js";
 
 const DELIVERY_FEE = Number(process.env.DELIVERY_FEE || 5000);
 const ADMIN_URL = process.env.ADMIN_URL || "https://balyiq.site/#/admin";
@@ -101,13 +102,18 @@ const createOrder = async (req) => {
   await writeJson(order.key, order);
 
   let notified = null;
+  let staff = null;
   try {
-    notified = await notifyNewOrder(order, ADMIN_URL);
+    [notified, staff] = await Promise.all([
+      notifyNewOrder(order, ADMIN_URL),
+      sendOrderToStaff(order).catch((e) => ({ sent: 0, reason: e.message })),
+    ]);
   } catch (e) {
     console.error("notify failed", e);
   }
-  if (notified) {
-    order.notified = { push: notified.push?.sent || 0, whatsapp: !!notified.whatsapp?.sent };
+  if (staff?.sent) order.prep = { state: "waiting", sentTo: staff.sent };
+  if (notified || staff?.sent) {
+    order.notified = { push: notified?.push?.sent || 0, whatsapp: !!notified?.whatsapp?.sent, staff: staff?.sent || 0 };
     await writeJson(order.key, order).catch(() => {});
   }
   return { ok: true, id: order.id, items: order.items, subtotal, deliveryFee, total: order.total };
@@ -120,6 +126,8 @@ const listOrders = async (req) => {
   const keys = await listOrderKeys(limit);
   const orders = (await Promise.all(keys.map((k) => readJson(k).catch(() => null)))).filter(Boolean);
   const filtered = since ? orders.filter((o) => Date.parse(o.createdAt) > since) : orders;
+  // the admin page polls every 30s, so it also drives the "nobody prepared it yet" reminders
+  await remindUnprepared().catch((e) => console.error("remind failed", e));
   return { orders: filtered, serverTime: Date.now() };
 };
 
