@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext, useContext, useMemo, Suspense, lazy } from "react";
+import React, { useEffect, useRef, useState, createContext, useContext, useMemo, Suspense, lazy } from "react";
 import { HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "./localAxios";
 import staticData from "./staticData.json";
@@ -48,6 +48,51 @@ class AdminBoundary extends React.Component {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
+const buildWhatsAppUrl = (text) =>
+  `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+
+// The order message the customer sends on WhatsApp after the thank-you page (same layout as before).
+const buildOrderMessage = ({ id, name, phone, delivery, address, notes, items, subtotal, deliveryFee }) => {
+  const deliveryLine = !delivery
+    ? "🚚 بدون توصيل (استلام)"
+    : deliveryFee === 0 ? "🚚 التوصيل: مجاني" : `🚚 التوصيل: ${formatPrice(deliveryFee)}`;
+  return [
+    `🌸 طلب جديد - ${SETTINGS.storeName} 🌸`,
+    id ? `🧾 رقم الطلب: ${id}` : null,
+    "━━━━━━━━━━━━━━━",
+    "",
+    "📞 بيانات التوصيل",
+    `• الاسم: ${name || "غير مذكور"}`,
+    `• الهاتف: ${phone || "غير مذكور"}`,
+    `• التوصيل: ${delivery ? "توصيل" : "بدون توصيل (استلام)"}`,
+    `• العنوان: ${address || "غير مذكور"}`,
+    notes ? `• ملاحظات: ${notes}` : null,
+    "",
+    "━━━━━━━━━━━━━━━",
+    "🛍️ تفاصيل الطلب",
+    "",
+    ...items.map((i, idx) => `${idx + 1}) ${i.name}\n     ${i.qty} × ${formatPrice(i.price)}  =  ${formatPrice(i.price * i.qty)}`),
+    "",
+    "━━━━━━━━━━━━━━━",
+    `🧾 مجموع المنتجات: ${formatPrice(subtotal)}`,
+    deliveryLine,
+    `💰 المبلغ الإجمالي: ${formatPrice(subtotal + deliveryFee)}`,
+    "━━━━━━━━━━━━━━━",
+    "",
+    "شكراً لطلبكم 💕",
+  ].filter((l) => l !== null).join("\n");
+};
+
+// the last thank-you page, so coming back from WhatsApp shows it again instead of an empty cart
+const RECEIPT_KEY = "store-last-receipt";
+const loadLastReceipt = () => {
+  try {
+    const r = JSON.parse(sessionStorage.getItem(RECEIPT_KEY) || "null");
+    return r && Date.now() - r.at < 30 * 60 * 1000 ? r : null;
+  } catch (e) { return null; }
+};
+const saveLastReceipt = (r) => { try { sessionStorage.setItem(RECEIPT_KEY, JSON.stringify(r)); } catch (e) { /* ignore */ } };
+const clearLastReceipt = () => { try { sessionStorage.removeItem(RECEIPT_KEY); } catch (e) { /* ignore */ } };
 const DELIVERY_FEE = SETTINGS.deliveryFee; // د.ع - delivery to the other governorates (admin panel)
 const deliverySummary = () => `توصيل اختياري بـ ${formatPrice(DELIVERY_FEE)}`;
 
@@ -864,11 +909,13 @@ const Checkout = () => {
     const saved = loadCustomer();
     return { name: saved.name || "", phone: saved.phone || "", delivery: saved.delivery !== false, address: saved.address || "", notes: "" };
   });
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(() => items.length === 0 && !!loadLastReceipt());
+  const waTimer = useRef(null);
+  useEffect(() => () => clearTimeout(waTimer.current), []);
   const [phoneError, setPhoneError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [receipt, setReceipt] = useState(null); // { id, items, subtotal, deliveryFee, delivery, total }
+  const [receipt, setReceipt] = useState(() => (items.length === 0 ? loadLastReceipt() : null)); // { id, items, subtotal, deliveryFee, delivery, total, waUrl }
   const isKidsVideoOnly = items.length > 0 && items.every((item) => item.id === "kids-video-design");
   const allFree = items.length > 0 && items.every((i) => i.free_delivery);
   // delivery is optional: the fee applies only when the customer asks for it
@@ -941,12 +988,22 @@ const Checkout = () => {
     }
 
     saveCustomer({ name, phone, delivery: form.delivery, address: form.address.trim() });
-    setReceipt({ id: saved.id, items: saved.items, subtotal: saved.subtotal, deliveryFee: saved.deliveryFee, delivery: form.delivery, total: saved.subtotal + saved.deliveryFee });
+    const waUrl = buildWhatsAppUrl(buildOrderMessage({
+      id: saved.id, name, phone, delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim(),
+      items: saved.items, subtotal: saved.subtotal, deliveryFee: saved.deliveryFee,
+    }));
+    const done = { id: saved.id, items: saved.items, subtotal: saved.subtotal, deliveryFee: saved.deliveryFee, delivery: form.delivery, total: saved.subtotal + saved.deliveryFee, waUrl, at: Date.now() };
+    saveLastReceipt(done);
+    setReceipt(done);
     setSent(true);
     setSubmitting(false);
     clearCart();
     window.scrollTo(0, 0);
-    playOrderCelebration();
+    // thank-you page and petals first, then WhatsApp opens with the order already written
+    const started = Date.now();
+    Promise.resolve(playOrderCelebration()).catch(() => {}).finally(() => {
+      waTimer.current = setTimeout(() => { window.location.href = waUrl; }, Math.max(400, 3200 - (Date.now() - started)));
+    });
   };
 
   if (sent && receipt) {
@@ -955,7 +1012,7 @@ const Checkout = () => {
         <div className="text-center mb-7">
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-green-100 flex items-center justify-center text-4xl">✅</div>
           <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبج 🌹</h1>
-          <p className="text-gray-600 mb-3">شكراً إلج 💕 راح نتواصل وياج قريباً لتأكيد الطلب والتوصيل.</p>
+          <p className="text-gray-600 mb-3">شكراً إلج 💕 هسه ينفتح واتساب والطلب مكتوب، بس دوسي إرسال.</p>
           <div className="inline-flex items-center gap-2 bg-pink-50 border border-pink-200 rounded-full px-5 py-2">
             <span className="text-sm text-gray-600">رقم الطلب</span>
             <span className="font-extrabold text-pink-600 tracking-wider" dir="ltr" data-testid="order-number">{receipt.id}</span>
@@ -978,7 +1035,12 @@ const Checkout = () => {
           </div>
         </div>
 
-        <button onClick={() => navigate("/")} className="w-full border-2 border-pink-200 text-pink-600 hover:bg-pink-50 py-3.5 rounded-full font-bold transition" data-testid="order-back-home">
+        {receipt.waUrl && (
+          <a href={receipt.waUrl} onClick={() => clearTimeout(waTimer.current)} className="w-full mb-3 bg-[#25d366] hover:bg-green-600 text-white py-3.5 rounded-full font-bold transition flex items-center justify-center gap-2" data-testid="order-send-whatsapp">
+            <MessageCircle size={20} /> أرسلي الطلب على واتساب
+          </a>
+        )}
+        <button onClick={() => { clearTimeout(waTimer.current); clearLastReceipt(); navigate("/"); }} className="w-full border-2 border-pink-200 text-pink-600 hover:bg-pink-50 py-3.5 rounded-full font-bold transition" data-testid="order-back-home">
           الرجوع للمتجر
         </button>
       </div>
@@ -1072,7 +1134,7 @@ const Checkout = () => {
           <button type="submit" disabled={submitting} className="w-full bg-[#e91e63] hover:bg-pink-700 disabled:opacity-60 text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 transition shadow-md" data-testid="submit-order">
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
-          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد يوصلنا طلبج ونتواصل وياج</p>
+          <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد ينفتح واتساب والطلب مكتوب</p>
         </form>
 
         <aside className="lg:col-span-2 min-w-0 bg-pink-50/50 rounded-3xl border border-pink-100 p-5 sm:p-6 h-fit lg:sticky lg:top-28">
