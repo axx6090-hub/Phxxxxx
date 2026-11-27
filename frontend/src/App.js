@@ -9,6 +9,7 @@ import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
 import { optimized, fallbackTo } from "./lib/img";
 import { playOrderCelebration } from "./lib/pillBurst";
+import InstallAppCard from "./components/InstallAppCard";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
 // exists. In that case reload once from the server instead of showing a blank page.
@@ -658,6 +659,7 @@ const Home = () => {
         <ProductSection key={c.id} title={c.name} emoji={c.emoji} category={c.id} viewAllLink={`/collection/category-${c.slug}`} />
       ))}
       <RecentlyViewed />
+      <InstallAppCard />
     </>
   );
 };
