@@ -60,6 +60,16 @@
         });
       })();
     </script>
+        <!-- Vercel Web Analytics (free): counts store visitors; skipped on the admin site -->
+        <script>
+            if (location.hostname !== "admin.balyiq.site") {
+                window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+                var vaScript = document.createElement("script");
+                vaScript.defer = true;
+                vaScript.src = "/_vercel/insights/script.js";
+                document.head.appendChild(vaScript);
+            }
+        </script>
 </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
