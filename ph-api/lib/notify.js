@@ -40,16 +40,36 @@ export const sendPush = async (payload) => {
   return { sent, failed };
 };
 
-export const sendWhatsApp = async (settings, text) => {
+// CallMeBot wants the number in international form with "+", e.g. +9647701234567.
+const callmebotPhone = (raw) => {
+  let n = String(raw || "").replace(/[^\d+]/g, "").replace(/^00/, "+");
+  if (/^07\d{9}$/.test(n)) n = "+964" + n.slice(1);
+  else if (/^964\d{10}$/.test(n)) n = "+" + n;
+  return /^\+\d{8,15}$/.test(n) ? n : "";
+};
+
+// The number and key come from the admin «التنبيهات» page, or else from the Vercel
+// environment variables CALLMEBOT_PHONE and CALLMEBOT_APIKEY (never from code).
+const whatsappTarget = (settings) => {
   const wa = settings && settings.whatsapp;
-  if (!wa || !wa.enabled || !wa.phone || !wa.apikey) return { sent: false, reason: "disabled" };
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(wa.phone)}&apikey=${encodeURIComponent(wa.apikey)}&text=${encodeURIComponent(text)}`;
+  if (wa && wa.enabled && wa.phone && wa.apikey) return { phone: callmebotPhone(wa.phone), apikey: String(wa.apikey).trim() };
+  const phone = callmebotPhone(process.env.CALLMEBOT_PHONE);
+  const apikey = String(process.env.CALLMEBOT_APIKEY || "").trim();
+  return phone && apikey ? { phone, apikey } : null;
+};
+
+export const sendWhatsApp = async (settings, text) => {
+  const target = whatsappTarget(settings);
+  if (!target || !target.phone) return { sent: false, reason: "disabled" };
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(target.phone)}&apikey=${encodeURIComponent(target.apikey)}&text=${encodeURIComponent(text)}`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
     const body = (await res.text()).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     const ok = res.ok && !/error|invalid|not\s+active|apikey/i.test(body.slice(0, 300));
-    return { sent: ok, reason: ok ? undefined : body.slice(0, 200) || `HTTP ${res.status}` };
+    if (!ok) console.error("callmebot failed", res.status);
+    return { sent: ok, reason: ok ? undefined : `HTTP ${res.status}` };
   } catch (e) {
+    console.error("callmebot failed", e.name);
     return { sent: false, reason: e.name === "TimeoutError" ? "timeout" : e.message };
   }
 };
@@ -60,6 +80,7 @@ export const orderSummary = (order) => {
     `👤 ${order.customer.name || "بدون اسم"} — ${order.customer.phone || "بدون رقم"}`,
     `📍 ${[order.customer.city, order.customer.address].filter(Boolean).join(" - ") || "بدون عنوان"}`,
     ...order.items.map((i) => `• ${i.name} × ${i.qty}`),
+    `📦 عدد القطع: ${order.items.reduce((n, i) => n + (Number(i.qty) || 0), 0)}`,
     `💰 المجموع: ${formatPrice(order.total)}`,
   ];
   if (order.customer.notes) lines.push(`📝 ${order.customer.notes}`);
@@ -75,7 +96,7 @@ export const notifyNewOrder = async (order, adminUrl) => {
       url: adminUrl,
       tag: `order-${order.id}`,
     }).catch((e) => ({ sent: 0, failed: 1, reason: e.message })),
-    sendWhatsApp(settings, orderSummary(order)),
+    sendWhatsApp(settings, orderSummary(order)).catch((e) => ({ sent: false, reason: e.message })),
   ]);
   return { push, whatsapp };
 };
