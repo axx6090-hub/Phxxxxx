@@ -49,7 +49,8 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const WHATSAPP_NUMBER = SETTINGS.whatsapp; // edited from the admin panel
 const buildWhatsAppUrl = (text) =>
-  `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+  // api.whatsapp.com keeps emojis; the wa.me redirect turns them into "?" marks.
+  `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}${text ? `&text=${encodeURIComponent(text)}` : ""}`;
 
 // The order message the customer sends on WhatsApp after the thank-you page (same layout as before).
 const buildOrderMessage = ({ id, name, phone, delivery, address, notes, items, subtotal, deliveryFee }) => {
