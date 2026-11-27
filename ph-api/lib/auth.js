@@ -1,6 +1,9 @@
 // Admin = whoever knows ADMIN_PASSWORD (a Vercel env var on this project, set by the owner).
 // Login gives a signed, HttpOnly session cookie; every admin endpoint checks it on the server.
 // Changing ADMIN_PASSWORD in Vercel signs every device out.
+// ADMIN_PATH_KEY (also on the store project) is the private part of the admin address,
+// admin.balyiq.site/<key>. A login must carry it in X-Admin-Key; a wrong or missing key
+// counts as a wrong try, so guessing the password without the address gets nowhere.
 import { createHash, createHmac, timingSafeEqual, randomBytes } from "node:crypto";
 import { HttpError, clientIp } from "./http.js";
 import { readJson, writeJson } from "./store.js";
@@ -12,6 +15,7 @@ const FAIL_WINDOW_MS = 15 * 60 * 1000;
 const FAILS_PATH = "admin/login-fails.json";
 
 const password = () => String(process.env.ADMIN_PASSWORD || "");
+const pathKey = () => String(process.env.ADMIN_PATH_KEY || "").trim();
 export const passwordConfigured = () => password().length >= 8;
 
 // signing key comes from the password itself, so a new password ends all old sessions
@@ -73,7 +77,8 @@ export const checkPassword = async (req, attempt) => {
   const mine = fails[id];
   if (mine && mine.count >= MAX_FAILS) throw new HttpError(429, "محاولات كثيرة غلط. جرّب بعد ربع ساعة.");
 
-  if (safeEqual(attempt, password())) {
+  const keyOk = !pathKey() || safeEqual(String(req.headers["x-admin-key"] || ""), pathKey());
+  if (keyOk && safeEqual(attempt, password())) {
     if (mine) { delete fails[id]; await writeJson(FAILS_PATH, fails).catch(() => {}); }
     return true;
   }

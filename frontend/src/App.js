@@ -1458,8 +1458,9 @@ const CookieConsent = () => {
 };
 
 // ============== APP ==============
-// The admin panel opens only on its own address (admin.balyiq.site, or a build with
-// REACT_APP_ADMIN=1); the public store has no admin page. The server checks the password.
+// The admin panel opens only on its own address (admin.balyiq.site/<private key>, or a build with
+// REACT_APP_ADMIN=1); the public store has no admin page. frontend/middleware.js gives every other
+// admin.* address a 404, and the server checks the key and the password.
 const IS_ADMIN_BUILD = process.env.REACT_APP_ADMIN === "1" ||
   (typeof window !== "undefined" && /^admin\./i.test(window.location.hostname));
 
@@ -1469,6 +1470,11 @@ const AdminApp = () => {
     meta.name = "robots";
     meta.content = "noindex, nofollow";
     document.head.appendChild(meta);
+    // keep the private admin address out of the Referer header
+    const ref = document.createElement("meta");
+    ref.name = "referrer";
+    ref.content = "no-referrer";
+    document.head.appendChild(ref);
     document.title = "لوحة الأدمن | صيدلية أيمن";
   }, []);
   return (

@@ -10,7 +10,12 @@ export class ApiError extends Error {
   }
 }
 
-export const apiRequest = async (path, { method = "GET", body, token, timeoutMs = 15000 } = {}) => {
+// The admin site opens only on its private address (admin.balyiq.site/<key>); the login sends
+// that key with the password, so the server refuses a login that didn't come through it.
+export const adminPathKey = () =>
+  onAdminHost ? decodeURIComponent((window.location.pathname.split("/").filter(Boolean)[0] || "")) : "";
+
+export const apiRequest = async (path, { method = "GET", body, token, headers: extraHeaders, timeoutMs = 15000 } = {}) => {
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
   let res;
@@ -19,6 +24,7 @@ export const apiRequest = async (path, { method = "GET", body, token, timeoutMs 
       method,
       headers: {
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(extraHeaders || {}),
       },
       // admin calls carry the HttpOnly session cookie; the public store sends none
       credentials: token ? "include" : "omit",

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { brandSlug } from "../lib/brands";
 import { Plus, Trash2, Sparkles, X, Search, Link2 } from "lucide-react";
 import { loadStoreData, publishStore } from "./github";
-import { apiRequest } from "../ordersApi";
+import { apiRequest, adminPathKey } from "../ordersApi";
 import { DEFAULT_AI_MODEL, analyzeProduct, analyzeLink, readProductLink, imageToFile, normalizeLink, blobToDataUrl, dataUrlToBase64, makeWhiteBackground, resizeForAnalysis, serverAiAvailable } from "./ai";
 import { useOrders, OrdersTab } from "./Orders";
 import { NotificationsSettings, registerServiceWorker } from "./Notifications";
@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
     setBusy(true);
     setError("");
     try {
-      await apiRequest("/api/admin", { method: "POST", token: "session", body: { password } });
+      await apiRequest("/api/admin", { method: "POST", token: "session", body: { password }, headers: { "X-Admin-Key": adminPathKey() } });
       setPassword("");
       onLogin(await loadStoreData());
     } catch (err) {

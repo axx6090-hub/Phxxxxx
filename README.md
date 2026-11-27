@@ -3,7 +3,7 @@
 متجر عراقي بواجهة عربية RTL يستقبل الطلبات عبر واتساب.
 
 - 🌐 **الموقع:** https://balyiq.site
-- 🔐 **لوحة الأدمن:** https://balyiq.site/#/admin
+- 🔐 **لوحة الأدمن:** تفتح بس من رابطها الخاص `admin.balyiq.site/<المفتاح>`. المفتاح بمتغير Vercel اسمه `ADMIN_PATH_KEY` (بمشروعي balyiq-store و balyiq-api) وما ينكتب بالكود. أي رابط ثاني على admin.balyiq.site يطلع 404.
 - 📦 **سيرفر الطلبات:** https://api.balyiq.site (المجلد `ph-api/`)
 
 ## كيف يشتغل
