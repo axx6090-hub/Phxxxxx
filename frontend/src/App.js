@@ -1136,6 +1136,9 @@ const Checkout = () => {
             <ShieldCheck size={22} /> {submitting ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           </button>
           <p className="text-center text-xs text-gray-500">💵 الدفع عند الاستلام · بعد التأكيد ينفتح واتساب والطلب مكتوب</p>
+          <p className="text-center text-[11px] text-gray-500 leading-relaxed" data-testid="checkout-terms-note">
+            بتأكيد الطلب توافقين على <Link to="/terms" className="text-pink-600 font-semibold underline underline-offset-2" data-testid="checkout-terms-link">الشروط والأحكام</Link>، ومنها إنّا نتواصل وياج على واتساب أو بمكالمة أو رسالة بخصوص طلبج.
+          </p>
         </form>
 
         <aside className="lg:col-span-2 min-w-0 bg-pink-50/50 rounded-3xl border border-pink-100 p-5 sm:p-6 h-fit lg:sticky lg:top-28">
@@ -1174,6 +1177,8 @@ const Footer = () => (
       </a>
       <div className="mt-6">
         <Link to="/privacy-policy" className="text-sm text-pink-200 hover:text-white underline underline-offset-4" data-testid="footer-privacy">سياسة الخصوصية</Link>
+        <span className="mx-3 text-pink-400/60">·</span>
+        <Link to="/terms" className="text-sm text-pink-200 hover:text-white underline underline-offset-4" data-testid="footer-terms">الشروط والأحكام</Link>
       </div>
       <div className="border-t border-pink-800/50 mt-8 pt-6 text-sm text-pink-300/70">
         © {new Date().getFullYear()} {SETTINGS.storeName} - جميع الحقوق محفوظة
@@ -1261,7 +1266,7 @@ const PrivacyPage = () => (
     <PrivacySection title="٢. شلون نستخدم معلوماتج">
       <ul className="list-disc pr-6 space-y-1">
         <li>تجهيز طلبج وتوصيله لعنوانج</li>
-        <li>التواصل وياج بخصوص الطلب، مثل التأكيد أو موعد التوصيل</li>
+        <li>التواصل وياج بخصوص الطلب، مثل التأكيد أو موعد التوصيل، عبر واتساب أو مكالمة هاتفية أو رسالة نصية</li>
         <li>الرد على أسئلتج واستفساراتج</li>
         <li>تحسين الموقع وتجربة التسوق</li>
       </ul>
@@ -1307,6 +1312,49 @@ const PrivacyPage = () => (
 
     <PrivacySection title="٩. تواصلي ويانا">
       <p>إذا عندج أي سؤال عن خصوصيتج، راسلينا على واتساب:</p>
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-[#25d366] hover:bg-green-600 text-white px-6 py-3 rounded-full font-semibold transition mt-2"
+      >
+        <MessageCircle size={18} /> تواصلي عبر واتساب
+      </a>
+    </PrivacySection>
+  </div>
+);
+
+// ============== TERMS ==============
+const TermsPage = () => (
+  <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12" data-testid="terms-page">
+    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#e91e63] mb-3">الشروط والأحكام</h1>
+    <p className="text-gray-700 leading-loose mb-8">
+      أهلاً بيج في {SETTINGS.storeName}. لما تستخدمين الموقع أو ترسلين طلب، فإنتِ توافقين على الشروط البسيطة هاي.
+    </p>
+
+    <PrivacySection title="١. الطلب والدفع">
+      <p>الأسعار المكتوبة بالموقع بالدينار العراقي، والمبلغ النهائي يظهر لج بصفحة الطلب قبل التأكيد. الدفع يكون نقداً عند الاستلام.</p>
+    </PrivacySection>
+
+    <PrivacySection title="٢. الموافقة على التواصل وياج">
+      <p data-testid="terms-contact-clause">
+        بتأكيد الطلب، توافقين إنّا نتواصل وياج على رقم الهاتف اللي كتبتيه، عبر واتساب أو مكالمة هاتفية أو رسالة نصية، حتى نأكد طلبج أو نرتب موعد التوصيل أو نجاوب على استفساراتج.
+      </p>
+    </PrivacySection>
+
+    <PrivacySection title="٣. الكوكيز">
+      <p>
+        لما تضغطين «موافق» على الكوكيز، يحفظ الموقع بجهازج سلتج وبيانات التوصيل حتى تلقينها جاهزة بزيارتج الجاية، ونستخدم أدوات إحصاء تساعدنا نحسّن تجربة الموقع. التفاصيل موجودة في{" "}
+        <Link to="/privacy-policy" className="text-pink-600 font-semibold underline underline-offset-2">سياسة الخصوصية</Link>.
+      </p>
+    </PrivacySection>
+
+    <PrivacySection title="٤. التعديلات">
+      <p>ممكن نحدّث هاي الشروط من وقت لوقت، وأي تغيير يظهر هنا بهاي الصفحة.</p>
+    </PrivacySection>
+
+    <PrivacySection title="٥. تواصلي ويانا">
+      <p>إذا عندج أي سؤال عن الشروط، راسلينا على واتساب:</p>
       <a
         href={`https://wa.me/${WHATSAPP_NUMBER}`}
         target="_blank"
@@ -1397,8 +1445,9 @@ const CookieConsent = () => {
     >
       <div className="bg-white border border-pink-100 shadow-lg rounded-2xl px-3 py-2.5 flex items-center gap-3">
         <p className="flex-1 text-xs text-gray-700 leading-relaxed">
-          🍪 نستخدم الكوكيز حتى نحفظ سلتج ونحسّن تجربتج. اضغطي «موافق» للموافقة على الكوكيز و{" "}
-          <Link to="/privacy-policy" className="text-pink-600 font-semibold underline underline-offset-2" data-testid="cookie-privacy-link">سياسة الخصوصية</Link>
+          🍪 نستخدم الكوكيز حتى نحفظ سلتج ونحسّن تجربتج بالموقع. اضغطي «موافق» للموافقة على الكوكيز و{" "}
+          <Link to="/privacy-policy" className="text-pink-600 font-semibold underline underline-offset-2" data-testid="cookie-privacy-link">سياسة الخصوصية</Link> و{" "}
+          <Link to="/terms" className="text-pink-600 font-semibold underline underline-offset-2" data-testid="cookie-terms-link">الشروط</Link>
         </p>
         <button onClick={accept} className="shrink-0 bg-pink-600 hover:bg-pink-700 text-white text-sm font-bold px-5 py-2 rounded-full transition" data-testid="cookie-accept">موافق</button>
       </div>
@@ -1442,6 +1491,7 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/petals-preview" element={<PetalsPreview />} />
