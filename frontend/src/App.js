@@ -382,7 +382,7 @@ const CartDrawer = () => {
 };
 
 // ============== PRODUCT CARD ==============
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, priority = false }) => {
   const { addToCart, wishlist, toggleWishlist } = useCart();
   const isWish = wishlist.includes(product.id);
   const hasDiscount = product.sale_price && product.sale_price > product.price;
@@ -409,7 +409,7 @@ const ProductCard = ({ product }) => {
 
       <Link to={`/product/${product.id}`} className="block">
         <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-50 overflow-hidden">
-          <img src={optimized(product.image, 640)} srcSet={srcSetFor(product.image, [256, 384, 640])} sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw" onError={fallbackTo(product.image)} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={optimized(product.image, 640)} srcSet={srcSetFor(product.image, [256, 384, 640])} sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw" onError={fallbackTo(product.image)} alt={product.name} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : "auto"} decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
       </Link>
       <div className="p-4">
@@ -520,7 +520,7 @@ const FeatureStrip = () => {
 };
 
 // ============== PRODUCT SECTION ==============
-const ProductSection = ({ title, emoji, category, viewAllLink }) => {
+const ProductSection = ({ title, emoji, category, viewAllLink, first = false }) => {
   const [products, setProducts] = useState(() => staticData.products.filter((product) => product.category === category).slice(0, 10));
   useEffect(() => {
     axios.get(`${API}/products?category=${category}&limit=10`).then((r) => setProducts(r.data)).catch(() => {});
@@ -541,7 +541,7 @@ const ProductSection = ({ title, emoji, category, viewAllLink }) => {
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
-        {products.slice(0, 10).map((p) => <ProductCard key={p.id} product={p} />)}
+        {products.slice(0, 10).map((p, idx) => <ProductCard key={p.id} product={p} priority={first && idx < 4} />)}
       </div>
     </section>
   );
@@ -654,7 +654,7 @@ const Home = () => {
     <>
       <Hero />
       <FeatureStrip />
-      <ProductSection title="الأكثر طلباً" emoji="⭐" category="best-selling" viewAllLink="/collection/best-selling" />
+      <ProductSection title="الأكثر طلباً" emoji="⭐" category="best-selling" viewAllLink="/collection/best-selling" first />
       {SETTINGS.showRoutine && <CategoriesSection />}
       <ProductSection title="عرض حصري" emoji="💎" category="offers" viewAllLink="/collection/offers" />
       {staticData.categories.filter((c) => c.home).map((c) => (
