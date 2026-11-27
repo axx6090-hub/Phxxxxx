@@ -5,7 +5,7 @@
 export const config = { runtime: "nodejs" };
 
 // files the panel loads; the public store serves the very same files, so they hide nothing
-const PUBLIC_FILE = /^\/(?:static\/|images\/|_vercel\/|(?:sw\.js|version\.json|staticData\.json|asset-manifest\.json|favicon\.ico|icon-\d+\.png|apple-touch-icon\.png|robots\.txt)$)/;
+const PUBLIC_FILE = /^\/(?:static\/|images\/|_vercel\/|(?:sw\.js|version\.json|staticData\.json|asset-manifest\.json|favicon\.ico|favicon-\d+\.png|icon-(?:maskable-)?\d+\.png|apple-touch-icon\.png|robots\.txt)$)/;
 
 const PRIVATE_HEADERS = {
   "Cache-Control": "no-store",
@@ -37,8 +37,10 @@ const adminManifest = (key) =>
       background_color: "#ffffff",
       theme_color: "#e91e63",
       icons: [
-        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+        { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     }),
     { headers: { "Content-Type": "application/manifest+json; charset=utf-8", ...PRIVATE_HEADERS } },
