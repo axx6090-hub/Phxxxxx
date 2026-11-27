@@ -4,6 +4,7 @@
 import React, { useRef, useState } from "react";
 import { Upload, Trash2 } from "lucide-react";
 import { listBrands } from "../lib/brands";
+import { productsCount } from "../lib/arCount";
 
 const readFile = (file) =>
   new Promise((resolve, reject) => {
@@ -77,7 +78,7 @@ export const BrandLogos = ({ products, brands, previews, onPick, onRemove, armed
               <div className="flex items-center justify-between gap-1">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate" dir="ltr">{b.name}</p>
-                  <p className="text-[11px] text-gray-500">{b.count} منتج{previews[b.slug] ? " · ينتظر النشر" : ""}</p>
+                  <p className="text-[11px] text-gray-500">{productsCount(b.count)}{previews[b.slug] ? " · ينتظر النشر" : ""}</p>
                 </div>
                 {shown && (
                   <button type="button" onClick={() => askConfirm(`logo:${b.slug}`, () => onRemove(b.slug))} title="شيل الشعار" className="text-gray-400 hover:text-red-500 shrink-0" data-testid={`admin-brand-remove-${b.slug}`}>

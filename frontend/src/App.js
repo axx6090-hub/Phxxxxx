@@ -10,6 +10,7 @@ import { SETTINGS } from "./siteSettings";
 import { optimized, fallbackTo } from "./lib/img";
 import { playOrderCelebration } from "./lib/pillBurst";
 import { unlockChime } from "./lib/orderChime";
+import { productsCount, piecesWord, hoursWord } from "./lib/arCount";
 import InstallAppCard from "./components/InstallAppCard";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
@@ -427,7 +428,7 @@ const ProductCard = ({ product }) => {
           return (
             <div className="flex items-center gap-1 text-[11px] text-red-500 font-semibold mb-3 animate-pulse">
               <span>🔥</span>
-              <span>تم شراء {sp.qty} قطعة في آخر {sp.hours} ساعة</span>
+              <span>تم شراء {sp.qty} {piecesWord(sp.qty)} في آخر {sp.hours} {hoursWord(sp.hours)}</span>
             </div>
           );
         })()}
@@ -453,7 +454,7 @@ const ProductCard = ({ product }) => {
             className="w-full bg-gray-900 hover:bg-pink-600 text-white py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
             data-testid={`add-to-cart-${product.id}`}
           >
-            <ShoppingBag size={15} /> أضف إلى السلة
+            <ShoppingBag size={15} /> أضيفي إلى السلة
           </button>
         )}
       </div>
@@ -707,7 +708,7 @@ const Collection = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2" data-testid="collection-title">{title}</h1>
-      <p className="text-gray-500 mb-8">{products.length} منتج</p>
+      <p className="text-gray-500 mb-8">{productsCount(products.length)}</p>
 
       {loading ? (
         <div className="text-center py-20 text-gray-500">جاري التحميل...</div>
@@ -735,7 +736,7 @@ const SearchPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">نتائج البحث: &quot;{q}&quot;</h1>
-      <p className="text-gray-500 mb-8">{products.length} منتج</p>
+      <p className="text-gray-500 mb-8">{productsCount(products.length)}</p>
       {products.length === 0 ? (
         <div className="text-center py-20 text-gray-500">لم نجد منتجات تطابق بحثج. جربي كلمة أخرى.</div>
       ) : (
@@ -805,7 +806,7 @@ const ProductDetail = () => {
             return (
               <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 text-sm font-bold px-3 py-2 rounded-full mb-6 animate-pulse w-fit">
                 <span className="text-base">🔥</span>
-                <span>تم شراء {sp.qty} قطعة في آخر {sp.hours} ساعة</span>
+                <span>تم شراء {sp.qty} {piecesWord(sp.qty)} في آخر {sp.hours} {hoursWord(sp.hours)}</span>
               </div>
             );
           })()}
@@ -887,7 +888,7 @@ const WishlistPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-extrabold text-gray-900 mb-2">قائمة الرغبات</h1>
-      <p className="text-gray-500 mb-8">{products.length} منتج</p>
+      <p className="text-gray-500 mb-8">{productsCount(products.length)}</p>
       {products.length === 0 ? (
         <div className="text-center py-20">
           <Heart size={60} className="text-pink-200 mx-auto mb-4" />
@@ -1390,7 +1391,7 @@ const BrandsSection = () => {
               </div>
             </div>
             <p className="text-xs sm:text-sm font-bold text-gray-800 group-hover:text-pink-600 truncate" dir="ltr">{b.name}</p>
-            <p className="text-[11px] text-gray-400">{b.count} منتج</p>
+            <p className="text-[11px] text-gray-400">{productsCount(b.count)}</p>
           </Link>
         ))}
       </div>

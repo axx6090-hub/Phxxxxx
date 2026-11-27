@@ -10,6 +10,7 @@ import { SiteSettings } from "./SiteSettings";
 import { BrandLogos } from "./BrandLogos";
 import { useConfirmTap } from "./confirmTap";
 import { InstallAdminButton, useAdminAppHead } from "./InstallAdminApp";
+import { productsCount } from "../lib/arCount";
 
 const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
 const AI_MODEL_KEY = "admin_ai_model";
@@ -592,7 +593,7 @@ const Panel = ({ token, initial, onLogout }) => {
             </select>
           </div>
           <div className="flex items-center justify-between gap-3 mb-3">
-            <p className="text-sm text-gray-500">{visible.length} منتج</p>
+            <p className="text-sm text-gray-500">{productsCount(visible.length)}</p>
             {data.products.length > 0 && !confirmAll && (
               <button onClick={() => setConfirmAll(true)} className="text-xs font-bold text-red-600 border border-red-200 bg-white hover:bg-red-50 px-3 py-1.5 rounded-full" data-testid="admin-delete-all">حذف كل المنتجات</button>
             )}
@@ -660,7 +661,7 @@ const Panel = ({ token, initial, onLogout }) => {
                 <input value={c.emoji || ""} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).emoji = e.target.value; return d; })} maxLength={4} aria-label="إيموجي القسم" className="w-11 h-11 rounded-xl bg-pink-50 text-center text-2xl shrink-0 outline-none focus:ring-2 focus:ring-pink-300" />
                 <div className="flex-1 min-w-0">
                   <input value={c.name} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).name = e.target.value; return d; })} aria-label="اسم القسم" className="w-full font-semibold text-sm text-gray-900 bg-transparent border-b border-transparent hover:border-pink-200 focus:border-pink-400 outline-none" data-testid={`admin-cat-rename-${c.id}`} />
-                  <p className="text-xs text-gray-500">{counts[c.id] || 0} منتج</p>
+                  <p className="text-xs text-gray-500">{productsCount(counts[c.id] || 0)}</p>
                 </div>
                 <label className="flex items-center gap-1.5 text-xs text-gray-600 shrink-0">
                   <input type="checkbox" checked={!!c.home} onChange={(e) => change((d) => { d.categories.find((x) => x.id === c.id).home = e.target.checked; return d; })} /> بالرئيسية
