@@ -3,6 +3,8 @@
 // GET    /api/orders?number=12  — admin finds one order by its number (or an old code like K7Q3-9F2A)
 // PATCH  /api/orders            — admin changes an order's status { key, status }
 // DELETE /api/orders?key=...    — admin deletes an order
+// PUT    /api/orders            — admin bulk action on selected orders
+//                                 { action: "status", keys: [...], status } or { action: "delete", keys: [...] }
 import { randomBytes } from "node:crypto";
 import { route, readBody, HttpError, clientIp } from "../lib/http.js";
 import { readJson, writeJson, orderKey, listOrderKeys, ORDER_KEY_RE, deleteBlob, claimOrderNumber, orderKeyForNumber } from "../lib/store.js";
@@ -189,4 +191,34 @@ const removeOrder = async (req) => {
   return { ok: true };
 };
 
-export default route({ POST: createOrder, GET: listOrders, PATCH: updateOrder, DELETE: removeOrder });
+const BULK_MAX = 200;
+const bulkOrders = async (req) => {
+  await requireAdmin(req);
+  const { action, keys, status } = readBody(req);
+  if (!Array.isArray(keys) || !keys.length) throw new HttpError(400, "ما محدد أي طلب.");
+  if (keys.length > BULK_MAX) throw new HttpError(400, `تكدر تحدد ${BULK_MAX} طلب كحد أقصى بالمرة الوحدة.`);
+  const list = [...new Set(keys.map(String))];
+  if (!list.every((k) => ORDER_KEY_RE.test(k))) throw new HttpError(400, "طلب غير معروف.");
+
+  if (action === "delete") {
+    await deleteBlob(list);
+    return { ok: true, deleted: list.length, keys: list };
+  }
+  if (action === "status") {
+    if (!STATUSES.includes(status)) throw new HttpError(400, "حالة غير صحيحة.");
+    const now = new Date().toISOString();
+    const results = await Promise.all(list.map(async (key) => {
+      const order = await readJson(key).catch(() => null);
+      if (!order) return null;
+      order.status = status;
+      order.updatedAt = now;
+      await writeJson(key, order);
+      return order;
+    }));
+    const orders = results.filter(Boolean);
+    return { ok: true, updated: orders.length, orders };
+  }
+  throw new HttpError(400, "عملية غير معروفة.");
+};
+
+export default route({ POST: createOrder, GET: listOrders, PATCH: updateOrder, PUT: bulkOrders, DELETE: removeOrder });

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useConfirmTap } from "./confirmTap";
-import { Phone, MessageCircle, Trash2, RefreshCw, ChevronDown, Search, X } from "lucide-react";
+import { Phone, MessageCircle, Trash2, RefreshCw, ChevronDown, Search, X, Check } from "lucide-react";
 import { apiRequest } from "../ordersApi";
 
 export const ORDER_STATUSES = [
@@ -124,7 +124,7 @@ export const useOrders = (token) => {
   return { orders, setOrders, loading, error, refresh, seen, markSeen, unseen };
 };
 
-const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
+const OrderCard = ({ order, isNew, token, onChange, onDelete, selected, onToggle }) => {
   const [open, setOpen] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -157,8 +157,12 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
   };
 
   return (
-    <div className={`bg-white border rounded-2xl overflow-hidden ${isNew ? "border-pink-400 shadow-md" : "border-pink-100"}`} data-testid={`admin-order-${order.id}`}>
-      <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-right">
+    <div className={`bg-white border rounded-2xl overflow-hidden ${selected ? "border-gray-900 ring-1 ring-gray-900" : isNew ? "border-pink-400 shadow-md" : "border-pink-100"}`} data-testid={`admin-order-${order.id}`}>
+      <div className="flex items-center">
+      <button type="button" onClick={onToggle} role="checkbox" aria-checked={selected} aria-label={`تحديد الطلب ${order.id}`} className="shrink-0 self-stretch flex items-center pr-3 pl-1" data-testid={`admin-order-select-${order.id}`}>
+        <span className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition ${selected ? "bg-gray-900 border-gray-900 text-white" : "border-gray-300 bg-white"}`}>{selected && <Check size={16} strokeWidth={3} />}</span>
+      </button>
+      <button type="button" onClick={() => setOpen(!open)} className="flex-1 min-w-0 flex items-center gap-3 p-3 pr-2 text-right">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-extrabold text-gray-900" dir="ltr">#{order.id}</span>
@@ -172,6 +176,7 @@ const OrderCard = ({ order, isNew, token, onChange, onDelete }) => {
         <span className="font-bold text-pink-600 shrink-0">{formatPrice(order.total)}</span>
         <ChevronDown size={18} className={`text-gray-400 shrink-0 transition ${open ? "rotate-180" : ""}`} />
       </button>
+      </div>
 
       {open && (
         <div className="border-t border-pink-100 p-4 space-y-4 text-sm">
@@ -240,6 +245,11 @@ export const OrdersTab = ({ token, state }) => {
   const [searching, setSearching] = useState(false);
   const [searchErr, setSearchErr] = useState("");
   const newIds = useRef(new Set());
+  const [selected, setSelected] = useState(() => new Set()); // order keys
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkErr, setBulkErr] = useState("");
+  const [bulkMsg, setBulkMsg] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // remember which orders were unseen when the tab opened, then mark them as seen
   useEffect(() => {
@@ -281,6 +291,56 @@ export const OrdersTab = ({ token, state }) => {
   const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === today && o.status !== "cancelled");
   const todayTotal = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
 
+  // selection only counts orders that are still on screen (filter, search or a refresh can hide some)
+  const visibleKeys = visible.map((o) => o.key);
+  const chosen = visibleKeys.filter((k) => selected.has(k));
+  const allChosen = visibleKeys.length > 0 && chosen.length === visibleKeys.length;
+  const toggleOne = (key) => setSelected((prev) => { const next = new Set(prev); if (next.has(key)) next.delete(key); else next.add(key); return next; });
+  const toggleAll = () => setSelected(allChosen ? new Set() : new Set(visibleKeys));
+  const clearSelection = () => { setSelected(new Set()); setConfirmDelete(false); };
+  useEffect(() => { setConfirmDelete(false); setBulkErr(""); }, [filter, q]);
+
+  const applyUpdated = (updated) => {
+    const byKey = new Map(updated.map((o) => [o.key, o]));
+    setOrders((list) => list.map((x) => byKey.get(x.key) || x));
+    setFound((f) => (f ? { ...f, orders: f.orders.map((x) => byKey.get(x.key) || x) } : f));
+  };
+  const applyDeleted = (keys) => {
+    const gone = new Set(keys);
+    setOrders((list) => list.filter((x) => !gone.has(x.key)));
+    setFound((f) => (f ? { ...f, orders: f.orders.filter((x) => !gone.has(x.key)) } : f));
+  };
+
+  const bulkStatus = async (status) => {
+    if (!chosen.length) return;
+    setBulkBusy(true); setBulkErr(""); setBulkMsg("");
+    try {
+      const res = await apiRequest("/api/orders", { method: "PUT", token, body: { action: "status", keys: chosen, status } });
+      applyUpdated(res.orders || []);
+      setBulkMsg(`تغيّرت حالة ${res.updated || 0} طلب إلى «${statusOf(status).label}».`);
+      clearSelection();
+    } catch (e) {
+      setBulkErr(e.message);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+  const bulkDelete = async () => {
+    if (!chosen.length) return;
+    setBulkBusy(true); setBulkErr(""); setBulkMsg("");
+    try {
+      const res = await apiRequest("/api/orders", { method: "PUT", token, body: { action: "delete", keys: chosen } });
+      applyDeleted(res.keys || chosen);
+      setBulkMsg(`انحذف ${res.deleted || chosen.length} طلب.`);
+      clearSelection();
+    } catch (e) {
+      setBulkErr(e.message);
+      setConfirmDelete(false);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   return (
     <div data-testid="admin-orders">
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -309,6 +369,54 @@ export const OrdersTab = ({ token, state }) => {
       {searchErr && <p className="text-red-600 text-sm mb-3">{searchErr}</p>}
 
       {error && <p className="text-red-600 text-sm mb-3" data-testid="admin-orders-error">{error}</p>}
+
+      {!loading && visible.length > 0 && (
+        <div className={`sticky top-0 z-10 mb-3 rounded-2xl border p-2.5 ${chosen.length ? "bg-gray-900 border-gray-900 text-white" : "bg-white border-pink-100"}`} data-testid="admin-orders-bulk">
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={toggleAll} role="checkbox" aria-checked={allChosen} className="flex items-center gap-2 text-sm font-bold" data-testid="admin-orders-select-all">
+              <span className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${allChosen ? (chosen.length ? "bg-white border-white text-gray-900" : "bg-gray-900 border-gray-900 text-white") : chosen.length ? "border-white" : "border-gray-300"}`}>
+                {allChosen ? <Check size={16} strokeWidth={3} /> : chosen.length ? <span className="w-2.5 h-0.5 bg-white rounded" /> : null}
+              </span>
+              تحديد الكل ({visibleKeys.length})
+            </button>
+            {chosen.length > 0 && (
+              <>
+                <span className="text-sm font-bold text-pink-300" data-testid="admin-orders-selected-count">محدد: {chosen.length}</span>
+                <button type="button" onClick={clearSelection} className="mr-auto text-xs font-semibold text-gray-300 hover:text-white" data-testid="admin-orders-clear-selection">إلغاء التحديد</button>
+              </>
+            )}
+          </div>
+          {chosen.length > 0 && (
+            <div className="mt-2.5 space-y-2">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span className="text-xs text-gray-300 shrink-0">غيّر الحالة:</span>
+                {ORDER_STATUSES.filter((s) => s.id !== "cancelled").map((s) => (
+                  <button key={s.id} type="button" disabled={bulkBusy} onClick={() => bulkStatus(s.id)} className="shrink-0 whitespace-nowrap text-xs font-bold px-3 py-1.5 rounded-full bg-white/10 border border-white/30 hover:bg-white hover:text-gray-900 disabled:opacity-50" data-testid={`admin-orders-bulk-status-${s.id}`}>{s.label}</button>
+                ))}
+              </div>
+              <button type="button" disabled={bulkBusy} onClick={() => setConfirmDelete(true)} className="w-full inline-flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl py-2 disabled:opacity-50" data-testid="admin-orders-bulk-delete">
+                <Trash2 size={16} /> حذف المحدد ({chosen.length})
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {bulkErr && <p className="text-red-600 text-sm mb-3" data-testid="admin-orders-bulk-error">{bulkErr}</p>}
+      {bulkMsg && <p className="text-green-700 text-sm mb-3" data-testid="admin-orders-bulk-msg">{bulkMsg}</p>}
+
+      {confirmDelete && chosen.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" onClick={() => !bulkBusy && setConfirmDelete(false)} data-testid="admin-orders-delete-dialog">
+          <div className="bg-white rounded-3xl w-full max-w-sm p-5 text-center" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><Trash2 size={22} /></div>
+            <p className="text-lg font-extrabold text-gray-900">تحذف {chosen.length} طلب؟</p>
+            <p className="text-sm text-gray-600 mt-1">الحذف نهائي وما يرجع. الطلبات: {visible.filter((o) => selected.has(o.key)).slice(0, 12).map((o) => `#${o.id}`).join("، ")}{chosen.length > 12 ? " ..." : ""}</p>
+            <div className="flex gap-2 mt-5">
+              <button type="button" disabled={bulkBusy} onClick={() => setConfirmDelete(false)} className="flex-1 border border-gray-300 rounded-2xl py-2.5 font-bold text-gray-700" data-testid="admin-orders-delete-cancel">لا، رجوع</button>
+              <button type="button" disabled={bulkBusy} onClick={bulkDelete} className="flex-1 bg-red-600 text-white rounded-2xl py-2.5 font-bold disabled:opacity-60" data-testid="admin-orders-delete-confirm">{bulkBusy ? "جاري الحذف..." : `نعم، احذف ${chosen.length}`}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {loading ? (
         <p className="text-center text-gray-500 py-10">جاري تحميل الطلبات...</p>
       ) : visible.length === 0 ? (
@@ -317,6 +425,7 @@ export const OrdersTab = ({ token, state }) => {
         <div className="space-y-2">
           {visible.map((o) => (
             <OrderCard key={o.key} order={o} token={token} isNew={newIds.current.has(o.id) && o.status === "new"}
+              selected={selected.has(o.key)} onToggle={() => toggleOne(o.key)}
               onChange={(updated) => {
                 setOrders((list) => list.map((x) => (x.key === updated.key ? updated : x)));
                 setFound((f) => (f ? { ...f, orders: f.orders.map((x) => (x.key === updated.key ? updated : x)) } : f));
