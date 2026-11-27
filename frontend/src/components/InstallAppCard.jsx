@@ -141,8 +141,8 @@ const InstallAppCard = () => {
   const onIPhone = () => setOpen("ios");
   const iosFirst = isIOS();
 
-  const android = <StoreButton key="a" onClick={onAndroid} mark={<AndroidMark />} small="ثبّتيه على" big="أندرويد" testId="install-android" />;
-  const iphone = <StoreButton key="i" onClick={onIPhone} mark={<IPhoneMark />} small="ثبّتيه على" big="آيفون" testId="install-iphone" />;
+  const android = <StoreButton key="a" onClick={onAndroid} mark={<AndroidMark />} small="ثبّتيها على" big="أندرويد" testId="install-android" />;
+  const iphone = <StoreButton key="i" onClick={onIPhone} mark={<IPhoneMark />} small="ثبّتيها على" big="آيفون" testId="install-iphone" />;
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-14" data-testid="install-app">
