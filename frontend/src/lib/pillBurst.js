@@ -1,6 +1,7 @@
 // Order celebration: a glossy green-and-white capsule flies to the middle of the screen,
 // splits open and throws out red and pink rose petals. Plain DOM + Web Animations, no assets.
 import { firePetals } from "./confetti";
+import { playChime } from "./orderChime";
 
 const el = (style, parent) => {
   const d = document.createElement("div");
@@ -21,7 +22,7 @@ export const playOrderCelebration = async () => {
   if (typeof document === "undefined") return;
   let reduced = false;
   try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* ignore */ }
-  if (reduced || !document.body.animate) { firePetals({ from: "center" }); return; }
+  if (reduced || !document.body.animate) { playChime(); firePetals({ from: "center" }); return; }
 
   const W = Math.min(window.innerWidth * 0.62, 300);
   const H = Math.round(W * 0.36);
@@ -60,6 +61,7 @@ export const playOrderCelebration = async () => {
       { transform: "rotate(22deg) scale(1.06)" },
     ], { duration: 260, easing: "ease-in-out" });
     // 3) it opens: the halves fly apart and the petals burst out
+    playChime();
     firePetals({ from: "center", pieces: 75, duration: 4000 });
     const open = { duration: 560, easing: "cubic-bezier(.3,.7,.3,1)" };
     anim(overlay, [{ backgroundColor: "rgba(255,241,246,0.82)" }, { backgroundColor: "rgba(255,241,246,0)" }], { duration: 700, easing: "ease-out" });

@@ -9,6 +9,7 @@ import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
 import { optimized, fallbackTo } from "./lib/img";
 import { playOrderCelebration } from "./lib/pillBurst";
+import { unlockChime } from "./lib/orderChime";
 import InstallAppCard from "./components/InstallAppCard";
 
 // After a new deploy the browser may still hold the old page, whose admin file no longer
@@ -965,6 +966,7 @@ const Checkout = () => {
     const name = form.name.trim().slice(0, 80);
     const customer = { name, phone, city: "", delivery: form.delivery, address: form.address.trim(), notes: form.notes.trim() };
 
+    unlockChime(); // inside the tap, so the chime may play when the capsule opens
     setSubmitting(true);
     const payload = { items: items.map((i) => ({ id: i.id, qty: i.qty, price: i.price, name: i.name, free_delivery: i.free_delivery })), customer };
 
@@ -1409,8 +1411,8 @@ const PetalsPreview = () => {
   return (
     <div className="max-w-xl mx-auto px-4 py-16 text-center" data-testid="petals-preview">
       <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم استلام طلبج 🌹</h1>
-      <p className="text-gray-600 mb-6">هذا شكل الاحتفال بعد تأكيد الطلب (معاينة فقط، ما ينحفظ أي طلب).</p>
-      <button onClick={() => playOrderCelebration()} className="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-full" data-testid="petals-again">شوف مرة ثانية</button>
+      <p className="text-gray-600 mb-6">هذا شكل الاحتفال بعد تأكيد الطلب (معاينة فقط، ما ينحفظ أي طلب). دوس الزر حتى تسمع الصوت.</p>
+      <button onClick={() => { unlockChime(); playOrderCelebration(); }} className="bg-pink-600 hover:bg-pink-700 text-white font-bold px-6 py-3 rounded-full" data-testid="petals-again">شوف مرة ثانية</button>
     </div>
   );
 };
