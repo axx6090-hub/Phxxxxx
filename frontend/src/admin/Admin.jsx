@@ -9,6 +9,7 @@ import { NotificationsSettings, registerServiceWorker } from "./Notifications";
 import { SiteSettings } from "./SiteSettings";
 import { BrandLogos } from "./BrandLogos";
 import { useConfirmTap } from "./confirmTap";
+import { InstallAdminButton, useAdminAppHead } from "./InstallAdminApp";
 
 const AI_KEY = "admin_xingchi_key"; // browser-only fallback until the server holds the key
 const AI_MODEL_KEY = "admin_ai_model";
@@ -65,6 +66,7 @@ const Login = ({ onLogin }) => {
           {error && <p className="text-red-600 text-sm" data-testid="admin-login-error">{error}</p>}
           <button type="submit" disabled={busy || !password} className={`${btnPrimary} w-full`} data-testid="admin-login-btn">{busy ? "جاري التحقق..." : "دخول"}</button>
         </form>
+        <div className="mt-5 pt-5 border-t border-gray-100 flex justify-center"><InstallAdminButton /></div>
       </div>
     </div>
   );
@@ -522,6 +524,7 @@ const Panel = ({ token, initial, onLogout }) => {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h1 className="text-2xl font-extrabold text-gray-900">لوحة الأدمن</h1>
         <div className="flex items-center gap-2">
+          <InstallAdminButton />
           <a href="https://balyiq.site/" target="_blank" rel="noopener noreferrer" className={btnGhost}>عرض المتجر</a>
           <button onClick={onLogout} className={btnGhost} data-testid="admin-logout">خروج</button>
         </div>
@@ -716,6 +719,7 @@ const SESSION = "session"; // admin API calls carry the session cookie
 export default function Admin() {
   const [loaded, setLoaded] = useState(null);
   const [checking, setChecking] = useState(true);
+  useAdminAppHead(); // the admin installs as its own green «الأدمن» app
 
   useEffect(() => {
     store.set("admin_gh_token", ""); // older panel kept a GitHub token here

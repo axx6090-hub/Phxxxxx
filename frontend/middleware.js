@@ -5,7 +5,7 @@
 export const config = { runtime: "nodejs" };
 
 // files the panel loads; the public store serves the very same files, so they hide nothing
-const PUBLIC_FILE = /^\/(?:static\/|images\/|_vercel\/|(?:sw\.js|version\.json|staticData\.json|asset-manifest\.json|favicon\.ico|favicon-\d+\.png|icon-(?:maskable-)?\d+\.png|apple-touch-icon\.png|robots\.txt)$)/;
+const PUBLIC_FILE = /^\/(?:static\/|images\/|_vercel\/|(?:sw\.js|version\.json|staticData\.json|asset-manifest\.json|favicon\.ico|(?:admin-)?favicon-\d+\.png|(?:admin-)?icon-(?:maskable-)?\d+\.png|(?:admin-)?apple-touch-icon\.png|robots\.txt)$)/;
 
 const PRIVATE_HEADERS = {
   "Cache-Control": "no-store",
@@ -23,24 +23,28 @@ const notFound = () =>
 const rewriteTo = (url, headers = {}) =>
   new Response(null, { headers: { ...headers, "x-middleware-rewrite": url.toString() } });
 
+// The admin's own home-screen app («الأدمن», green icon), separate from the store app.
+// It is served only under the private address (/<key>/manifest.webmanifest), so the key
+// never shows on a public URL; /manifest.json on the admin host is a 404.
 const adminManifest = (key) =>
   new Response(
     JSON.stringify({
       id: `/${key}`,
-      name: "لوحة الأدمن | صيدلية أيمن",
-      short_name: "أدمن صيدلية أيمن",
+      name: "الأدمن",
+      short_name: "الأدمن",
+      description: "لوحة إدارة صيدلية أيمن",
       lang: "ar",
       dir: "rtl",
       start_url: `/${key}`,
       scope: "/",
       display: "standalone",
       background_color: "#ffffff",
-      theme_color: "#e91e63",
+      theme_color: "#16a34a",
       icons: [
-        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-        { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
-        { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        { src: "/admin-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "/admin-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "/admin-icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+        { src: "/admin-icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     }),
     { headers: { "Content-Type": "application/manifest+json; charset=utf-8", ...PRIVATE_HEADERS } },
@@ -55,7 +59,7 @@ export default function middleware(request) {
 
   const path = url.pathname;
   if (path === `/${key}` || path === `/${key}/`) return rewriteTo(new URL("/index.html", url), PRIVATE_HEADERS);
-  if (path === "/manifest.json") return adminManifest(key);
+  if (path === `/${key}/manifest.webmanifest`) return adminManifest(key);
   if (PUBLIC_FILE.test(path)) return;
   return notFound();
 }
