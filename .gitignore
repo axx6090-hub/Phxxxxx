@@ -11,3 +11,4 @@ __pycache__/
 # written at build time
 frontend/public/version.json
 frontend/.env.production.local
+frontend/public/sw-version.js

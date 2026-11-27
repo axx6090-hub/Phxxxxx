@@ -51,6 +51,22 @@ export const setupInstall = () => {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+      // A few seconds after the store opens, save the photos of the products on this page
+      // on the phone, so scrolling and the next visit show them at once.
+      if (!/^admin\./.test(window.location.hostname)) {
+        setTimeout(() => {
+          navigator.serviceWorker.ready
+            .then((reg) => {
+              const saveData = navigator.connection && navigator.connection.saveData;
+              if (!reg.active || saveData) return;
+              const urls = [...document.querySelectorAll('img[src^="/_vercel/image"]')].map((i) => {
+                try { const u = new URL(i.currentSrc || i.src, window.location.href); return u.pathname + u.search; } catch (e) { return i.getAttribute("src"); }
+              });
+              reg.active.postMessage({ type: "warm", urls: [...new Set(urls)].slice(0, 40) });
+            })
+            .catch(() => {});
+        }, 5000);
+      }
     });
   }
 };

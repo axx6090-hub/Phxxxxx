@@ -7,7 +7,7 @@ import { ShoppingBag, Heart, Search, X, ChevronLeft, Plus, Minus, Trash2, Messag
 import "@/App.css";
 import { apiRequest } from "./ordersApi";
 import { SETTINGS } from "./siteSettings";
-import { optimized, fallbackTo } from "./lib/img";
+import { optimized, srcSetFor, fallbackTo } from "./lib/img";
 import { playOrderCelebration } from "./lib/pillBurst";
 import { unlockChime } from "./lib/orderChime";
 import { productsCount, piecesWord, hoursWord } from "./lib/arCount";
@@ -409,7 +409,7 @@ const ProductCard = ({ product }) => {
 
       <Link to={`/product/${product.id}`} className="block">
         <div className="aspect-square bg-gradient-to-br from-pink-50 to-rose-50 overflow-hidden">
-          <img src={optimized(product.image, 640)} onError={fallbackTo(product.image)} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={optimized(product.image, 640)} srcSet={srcSetFor(product.image, [256, 384, 640])} sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw" onError={fallbackTo(product.image)} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
       </Link>
       <div className="p-4">
@@ -479,7 +479,7 @@ const Hero = () => {
         <div className="relative aspect-[16/9] sm:aspect-[21/8] overflow-hidden">
           {slides.map((s, idx) => (
             <Link key={idx} to={s.link} className={`absolute inset-0 transition-opacity duration-1000 ${idx === i ? "opacity-100" : "opacity-0"}`}>
-              <img src={optimized(s.img, 1080)} onError={fallbackTo(s.img)} alt={s.title} className="w-full h-full object-cover" />
+              <img src={optimized(s.img, 1080)} srcSet={srcSetFor(s.img, [640, 1080])} sizes="(min-width: 1280px) 1280px, 100vw" onError={fallbackTo(s.img)} alt={s.title} loading={idx === 0 ? "eager" : "lazy"} fetchPriority={idx === 0 ? "high" : "low"} decoding="async" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-l from-pink-900/40 via-transparent to-transparent" />
             </Link>
           ))}

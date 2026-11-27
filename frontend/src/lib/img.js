@@ -3,7 +3,7 @@ import hosts from "../imageHosts.json";
 // Product photos go through Vercel's image optimizer: resized to the size shown and
 // sent as WebP, cached on the CDN. Anywhere else (local dev, GitHub Pages) the original is used.
 const HOSTS = new Set(hosts);
-const SIZES = [256, 640, 1080];
+const SIZES = [256, 384, 640, 1080];
 const onVercel = () => {
   try { return /(^|\.)balyiq\.site$|\.vercel\.app$/.test(window.location.hostname); } catch (e) { return false; }
 };
@@ -21,6 +21,13 @@ export const optimized = (src, w) => {
   if (!url || /\.svg(\?|#|$)/i.test(url)) return src;
   const width = SIZES.find((s) => s >= w) || SIZES[SIZES.length - 1];
   return `/_vercel/image?url=${encodeURIComponent(url)}&w=${width}&q=75`;
+};
+
+// A list of sizes for the same photo, so a phone downloads a small one and a big screen a big one.
+export const srcSetFor = (src, widths) => {
+  const first = optimized(src, widths[0]);
+  if (!first || first === src) return undefined;
+  return widths.map((w) => `${optimized(src, w)} ${w}w`).join(", ");
 };
 
 // If the optimizer can't fetch a photo, show the original instead of a broken image.
